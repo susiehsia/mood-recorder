@@ -534,27 +534,15 @@ body {
         <button class="btn btn-secondary btn-small" onclick="importData()">导入</button>
       </div>
       <div class="settings-section">
-        <h3>⏰ 提醒设置</h3>
-        <div class="desc">
-          页面打开时会自动检查今天是否已记录。如果浏览器支持通知，可以开启提醒：
-        </div>
-        <div class="form-actions">
-          <button class="btn btn-secondary btn-small" onclick="requestNotification()">🔔 开启通知权限</button>
-        </div>
-        <div class="desc" style="margin-top:8px;">
-          <strong>每日定时提醒：</strong>配合系统任务计划程序，每天固定时间自动打开此页面。设置方法见下方。
-        </div>
-      </div>
-      <div class="settings-section">
-        <h3>📁 数据文件存储</h3>
-        <div class="desc">选一个 json 文件，每次保存时自动同步，你可以随时复制给其他设备。</div>
+        <h3>📁 数据文件备份</h3>
+        <div class="desc">把数据保存到文件，方便备份或传到其他设备。</div>
         <div id="fileStorageStatus" style="font-size:0.82rem;padding:8px 12px;background:#F8F6F0;border-radius:8px;margin-bottom:8px;">
-          📌 当前：未设置（数据存在浏览器缓存中）
+          💡 数据已保存在浏览器缓存中，点下方按钮备份到文件
         </div>
         <div class="form-actions" style="flex-wrap:wrap;">
-          <button class="btn btn-secondary btn-small" onclick="pickDataFile('new')">📂 新建数据文件</button>
-          <button class="btn btn-secondary btn-small" onclick="pickDataFile('open')">📂 打开已有文件</button>
-          <button class="btn btn-secondary btn-small" onclick="disconnectFile()" id="disconnectBtn" style="display:none;">断开连接</button>
+          <button class="btn btn-secondary btn-small" onclick="saveToFile()">💾 保存到文件</button>
+          <input type="file" accept=".json" id="loadFileInput" style="display:none;" onchange="loadFromFile(event)">
+          <button class="btn btn-secondary btn-small" onclick="document.getElementById('loadFileInput').click()">📂 从文件恢复</button>
         </div>
         <div id="fileSyncFeedback" class="save-feedback" style="margin-top:8px;"></div>
       </div>
@@ -696,8 +684,6 @@ const FIELD_DESC_MAP = {};
 
 // ============================================================
 //  文件存储
-// ============================================================
-let fileHandle = null; // mood_data.json 的文件句柄
 
 function getRecords() {
   try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; } catch { return {}; }
@@ -705,122 +691,62 @@ function getRecords() {
 
 function saveRecords(records) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
-  // 如果有文件句柄，也同步写入文件
-  if (fileHandle) {
-    writeFileSync(records);
-  }
 }
 
-async function writeFileSync(records) {
-  try {
-    const writable = await fileHandle.createWritable({ keepExistingData: true });
-    await writable.write(JSON.stringify(records, null, 2));
-    await writable.close();
-  } catch (e) {
-    console.warn('文件写入失败，数据仍保存在浏览器缓存中', e);
+function saveToFile() {
+  const records = getRecords();
+  if (Object.keys(records).length === 0) {
+    showFileFeedback('暂无数据可保存', 'error');
+    return;
   }
+  const json = JSON.stringify(records, null, 2);
+  const blob = new Blob([json], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'mood_data_' + todayStr() + '.json';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showFileFeedback('✅ 已保存到文件，请选择保存位置', 'success');
 }
 
-async function pickDataFile(mode) {
-  try {
-    if (!window.showOpenFilePicker && !window.showSaveFilePicker) {
-      alert('当前浏览器不支持文件系统 API，请使用最新版 Chrome 或 Edge');
-      return;
-    }
-
-    let handle = null;
-    if (mode === 'open') {
-      // 打开已有文件
-      if (!window.showOpenFilePicker) {
-        alert('当前浏览器不支持打开文件，请使用"新建数据文件"');
-        return;
-      }
-      const [result] = await window.showOpenFilePicker({
-        id: 'mood-data',
-        types: [{ description: 'JSON 文件', accept: { 'application/json': ['.json'] } }],
-        multiple: false,
-      });
-      handle = result;
-    } else {
-      // 新建文件
-      if (!window.showSaveFilePicker) {
-        alert('当前浏览器不支持新建文件，请使用"打开已有文件"');
-        return;
-      }
-      handle = await window.showSaveFilePicker({
-        suggestedName: 'mood_data.json',
-        id: 'mood-data',
-        types: [{ description: 'JSON 文件', accept: { 'application/json': ['.json'] } }],
-      });
-    }
-
-    fileHandle = handle;
-
-    // 读取文件中的已有数据
+function loadFromFile(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
     try {
-      const file = await fileHandle.getFile();
-      const text = await file.text();
-      if (text && text.trim()) {
-        const fileRecords = JSON.parse(text);
-        // 合并：文件中有而本地没有的数据
-        const localRecords = getRecords();
-        let merged = false;
-        Object.keys(fileRecords).forEach(date => {
-          if (!localRecords[date]) {
-            localRecords[date] = fileRecords[date];
-            merged = true;
-          }
-        });
-        if (merged) {
-          saveRecords(localRecords);
-        }
-        showFileFeedback('✅ 已从文件加载 ' + Object.keys(fileRecords).length + ' 条记录', 'success');
-      } else {
-        // 文件为空，把本地数据写入文件
-        const localRecords = getRecords();
-        if (Object.keys(localRecords).length > 0) {
-          await writeFileSync(localRecords);
-          showFileFeedback('✅ 已连接，本地数据已同步到文件', 'success');
-        } else {
-          showFileFeedback('✅ 已连接，等待填写记录', 'success');
-        }
-      }
-    } catch (e) {
-      // 新文件还没有内容，写入本地数据
+      const fileRecords = JSON.parse(e.target.result);
       const localRecords = getRecords();
-      if (Object.keys(localRecords).length > 0) {
-        await writeFileSync(localRecords);
+      let merged = false;
+      Object.keys(fileRecords).forEach(date => {
+        if (!localRecords[date]) {
+          localRecords[date] = fileRecords[date];
+          merged = true;
+        }
+      });
+      if (merged) {
+        saveRecords(localRecords);
+        showFileFeedback('✅ 已合并 ' + Object.keys(fileRecords).length + ' 条记录', 'success');
+      } else {
+        showFileFeedback('✅ 文件中的记录已存在，无需合并', 'success');
       }
-      showFileFeedback('✅ 已连接', 'success');
+      updateHeader();
+      renderCalendar();
+      renderStats();
+    } catch (err) {
+      showFileFeedback('⚠️ 文件格式错误：' + err.message, 'error');
     }
-
-    updateFileStatus();
-    document.getElementById('disconnectBtn').style.display = 'inline-flex';
-  } catch (e) {
-    if (e.name !== 'AbortError' && e.name !== 'SecurityError' && e.name !== 'NotFoundError') {
-      showFileFeedback('⚠️ 操作失败：' + e.message, 'error');
-    }
-  }
-}
-
-function disconnectFile() {
-  fileHandle = null;
-  document.getElementById('disconnectBtn').style.display = 'none';
-  updateFileStatus();
-  showFileFeedback('已断开文件连接', 'success');
-}
-
-function updateFileStatus() {
-  const el = document.getElementById('fileStorageStatus');
-  if (fileHandle) {
-    el.innerHTML = '✅ 已连接数据文件，每次保存自动同步';
-  } else {
-    el.innerHTML = '📌 当前：未设置（数据存在浏览器缓存中）';
-  }
+  };
+  reader.readAsText(file);
+  event.target.value = '';
 }
 
 function showFileFeedback(msg, type) {
   const el = document.getElementById('fileSyncFeedback');
+  if (!el) return;
   el.textContent = type === 'success' ? '✅ ' + msg : '⚠️ ' + msg;
   el.className = 'save-feedback ' + type;
   setTimeout(() => { el.className = 'save-feedback'; }, 4000);
@@ -1332,20 +1258,6 @@ function importData() {
   reader.readAsText(fileInput.files[0]);
 }
 
-function requestNotification() {
-  if (!('Notification' in window)) {
-    alert('当前浏览器不支持通知功能');
-    return;
-  }
-  Notification.requestPermission().then(perm => {
-    if (perm === 'granted') {
-      alert('通知权限已开启！每天 21:00 会提醒你填写记录。（需要页面保持打开）');
-    } else {
-      alert('通知权限被拒绝，可以在浏览器设置中重新开启');
-    }
-  });
-}
-
 // ============================================================
 //  参考说明
 // ============================================================
@@ -1473,24 +1385,6 @@ function closeModal(e) {
 }
 
 // ============================================================
-//  NOTIFICATION REMINDER
-// ============================================================
-function checkReminder() {
-  const records = getRecords();
-  if (records[state.currentDate]) return;
-  const now = new Date();
-  const hour = now.getHours();
-  if (hour >= 20 || hour < 2) {
-    if ('Notification' in window && Notification.permission === 'granted') {
-      new Notification('📋 每日记录提醒', {
-        body: '今天还没有记录，花 2 分钟填一下吧！',
-        icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">📋</text></svg>'
-      });
-    }
-  }
-}
-
-// ============================================================
 //  INIT
 // ============================================================
 function init() {
@@ -1511,9 +1405,7 @@ function init() {
     });
   });
 
-  // Check reminder after 3 seconds
-  setTimeout(checkReminder, 3000);
-}
+  }
 
 document.addEventListener('DOMContentLoaded', init);
 </script>

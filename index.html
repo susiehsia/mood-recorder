@@ -6,439 +6,106 @@
 <title>每日记录</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <style>
-/* ========== Reset & Base ========== */
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html { font-size: 16px; }
-body {
-  font-family: -apple-system, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
-  background: #F5F3EE;
-  color: #2D2D2D;
-  min-height: 100vh;
-  padding-bottom: 70px;
-  line-height: 1.5;
-}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:16px}
+body{font-family:-apple-system,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;background:#F5F3EE;color:#2D2D2D;min-height:100vh;padding-bottom:70px;line-height:1.5}
+.header{background:linear-gradient(135deg,#5B7DB1,#7B9BCB);color:#fff;padding:16px 20px 12px;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(91,125,177,0.3)}
+.header h1{font-size:1.1rem;font-weight:600;letter-spacing:2px}
+.header .date-display{font-size:0.82rem;opacity:0.85;margin-top:2px}
+.header .status-badge{display:inline-block;font-size:0.68rem;padding:2px 10px;border-radius:10px;margin-left:8px;background:rgba(255,255,255,0.2)}
+.header .status-badge.done{background:#7EB89D}
+.container{max-width:720px;margin:0 auto;padding:12px}
+.card{background:#fff;border-radius:14px;padding:16px;margin-bottom:12px;box-shadow:0 1px 4px rgba(0,0,0,0.06)}
+.card-title{font-size:0.92rem;font-weight:600;color:#5B7DB1;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px 12px}
+.form-group{display:flex;flex-direction:column}
+.form-group.full-width{grid-column:1/-1}
+.form-group label{font-size:0.75rem;color:#666;margin-bottom:2px;font-weight:500}
+.form-group label .hint{font-weight:400;color:#999;font-size:0.68rem;display:block}
+.form-group input,.form-group select{border:1.5px solid #E8E4DD;border-radius:8px;padding:7px 10px;font-size:0.85rem;font-family:inherit;background:#FAFAF8;transition:border-color .2s,box-shadow .2s;width:100%}
+.form-group input:focus,.form-group select:focus{outline:none;border-color:#5B7DB1;box-shadow:0 0 0 3px rgba(91,125,177,0.12);background:#fff}
+.form-group input[type="checkbox"]{width:18px;height:18px;margin-top:4px;accent-color:#5B7DB1}
+.form-group .checkbox-row{display:flex;align-items:center;gap:8px;padding-top:4px}
+.form-group .checkbox-row label{margin-bottom:0;cursor:pointer}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:5px;padding:9px 20px;border:none;border-radius:10px;font-size:0.88rem;font-weight:600;font-family:inherit;cursor:pointer;transition:transform .1s,box-shadow .2s}
+.btn:active{transform:scale(0.97)}
+.btn-primary{background:linear-gradient(135deg,#5B7DB1,#7B9BCB);color:#fff;box-shadow:0 2px 8px rgba(91,125,177,0.25)}
+.btn-secondary{background:#E8E4DD;color:#555}
+.btn-secondary:hover{background:#DDD8CE}
+.btn-small{padding:5px 12px;font-size:0.78rem;border-radius:8px}
+.btn-outline{background:transparent;border:1.5px solid #E8E4DD;color:#666}
+.btn-outline:hover{border-color:#5B7DB1;color:#5B7DB1}
+.form-actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.save-feedback{font-size:0.8rem;padding:5px 10px;border-radius:8px;display:none;align-items:center;gap:5px}
+.save-feedback.success{display:inline-flex;background:#E8F5EE;color:#4A8B6E}
+.save-feedback.error{display:inline-flex;background:#FDE8E8;color:#C44A4A}
+.tab-bar{position:fixed;bottom:0;left:0;right:0;background:#fff;display:flex;border-top:1px solid #E8E4DD;z-index:100;padding-bottom:env(safe-area-inset-bottom,0)}
+.tab-btn{flex:1;text-align:center;padding:7px 4px 5px;font-size:0.68rem;color:#999;cursor:pointer;transition:color .2s;border:none;background:none;font-family:inherit;user-select:none}
+.tab-btn .tab-icon{font-size:1.2rem;display:block;margin-bottom:1px}
+.tab-btn.active{color:#5B7DB1;font-weight:600}
+.tab-content{display:none}
+.tab-content.active{display:block}
+.cal-nav{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.cal-nav .month-label{font-size:0.95rem;font-weight:600;color:#2D2D2D}
+.cal-nav button{background:none;border:none;font-size:1.1rem;cursor:pointer;padding:4px 12px;color:#5B7DB1;border-radius:6px}
+.cal-nav button:hover{background:#F0EDE8}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;text-align:center}
+.cal-grid .cal-header{font-size:0.7rem;color:#999;padding:5px 0;font-weight:500}
+.cal-grid .cal-day{padding:7px 0;font-size:0.8rem;border-radius:8px;cursor:pointer;position:relative;min-height:34px;transition:background .15s}
+.cal-grid .cal-day:hover{background:#F0EDE8}
+.cal-grid .cal-day.other-month{color:#ccc}
+.cal-grid .cal-day.today{font-weight:700;color:#5B7DB1}
+.cal-grid .cal-day.has-data::after{content:'';position:absolute;bottom:3px;left:50%;transform:translateX(-50%)}
+.dots-wrap{position:absolute;bottom:2px;left:50%;transform:translateX(-50%);display:flex;gap:3px}
+.dots-wrap .dot{width:5px;height:5px;border-radius:50%}
+.cal-grid .cal-day.selected{background:#E8F0FA;outline:2px solid #5B7DB1}
+.stats-controls{display:flex;gap:5px;margin-bottom:12px;flex-wrap:wrap}
+.stats-controls .stat-btn{padding:5px 14px;border:1.5px solid #E8E4DD;border-radius:16px;font-size:0.78rem;background:#fff;cursor:pointer;font-family:inherit;color:#666;transition:all .2s}
+.stats-controls .stat-btn.active{background:#5B7DB1;color:#fff;border-color:#5B7DB1}
+.stats-controls .stat-btn:hover:not(.active){border-color:#5B7DB1;color:#5B7DB1}
+.chart-wrap{position:relative;max-height:240px;margin:0 -8px}
+.stats-summary{display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:6px;margin-top:12px}
+.stat-item{background:#F8F6F0;border-radius:10px;padding:8px;text-align:center}
+.stat-item .stat-value{font-size:1.2rem;font-weight:700;color:#5B7DB1}
+.stat-item .stat-label{font-size:0.68rem;color:#999;margin-top:2px}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:200;align-items:flex-end;justify-content:center}
+.modal-overlay.show{display:flex}
+.modal-content{background:#fff;border-radius:20px 20px 0 0;padding:20px 16px;max-width:720px;width:100%;max-height:85vh;overflow-y:auto;animation:slideUp .25s ease-out}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.modal-close{position:absolute;top:12px;right:16px;font-size:1.4rem;background:none;border:none;cursor:pointer;color:#999}
+.modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;position:relative}
+.modal-header h2{font-size:1.05rem;color:#2D2D2D}
+.settings-section{margin-bottom:16px}
+.settings-section h3{font-size:0.85rem;color:#666;margin-bottom:8px;font-weight:500}
+.settings-section .desc{font-size:0.75rem;color:#999;margin-bottom:8px;line-height:1.5}
+.export-area{background:#F8F6F0;border-radius:8px;padding:10px;font-size:0.72rem;font-family:Menlo,Consolas,monospace;max-height:180px;overflow:auto;white-space:pre-wrap;word-break:break-all;color:#555;margin-top:8px;display:none}
+.reminder-banner{background:#FFF8E1;border:1px solid #F0D86A;border-radius:10px;padding:10px 14px;margin-bottom:12px;display:none;align-items:center;gap:8px;font-size:0.82rem}
+.reminder-banner.show{display:flex}
+.reminder-banner .icon{font-size:1.1rem}
+.empty-state{text-align:center;padding:30px 16px;color:#999}
+.empty-state .icon{font-size:2rem;margin-bottom:8px}
+.empty-state p{font-size:0.85rem}
+@media(min-width:600px){.form-grid{grid-template-columns:1fr 1fr 1fr}.modal-content{border-radius:20px;margin:40px auto;max-width:560px}.modal-overlay{align-items:center}}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:#DDD8CE;border-radius:4px}
 
-/* ========== Header ========== */
-.header {
-  background: linear-gradient(135deg, #5B7DB1, #7B9BCB);
-  color: #fff;
-  padding: 20px 20px 16px;
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  box-shadow: 0 2px 12px rgba(91,125,177,0.3);
-}
-.header h1 { font-size: 1.2rem; font-weight: 600; letter-spacing: 2px; }
-.header .date-display { font-size: 0.85rem; opacity: 0.85; margin-top: 2px; }
-.header .status-badge {
-  display: inline-block;
-  font-size: 0.7rem;
-  padding: 2px 10px;
-  border-radius: 10px;
-  margin-left: 8px;
-  background: rgba(255,255,255,0.2);
-}
-.header .status-badge.done { background: #7EB89D; }
-
-/* ========== Container ========== */
-.container { max-width: 720px; margin: 0 auto; padding: 16px; }
-
-/* ========== Card ========== */
-.card {
-  background: #fff;
-  border-radius: 14px;
-  padding: 20px;
-  margin-bottom: 16px;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
-}
-.card-title {
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: #5B7DB1;
-  margin-bottom: 14px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.card-title .badge {
-  font-size: 0.65rem;
-  background: #E8E4DD;
-  color: #666;
-  padding: 1px 8px;
-  border-radius: 8px;
-  font-weight: 400;
-}
-
-/* ========== Form ========== */
-.form-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px 14px;
-}
-.form-group { display: flex; flex-direction: column; }
-.form-group.full-width { grid-column: 1 / -1; }
-.form-group label {
-  font-size: 0.78rem;
-  color: #666;
-  margin-bottom: 3px;
-  font-weight: 500;
-}
-.form-group label .hint {
-  font-weight: 400;
-  color: #999;
-  font-size: 0.7rem;
-}
-.form-group input, .form-group select {
-  border: 1.5px solid #E8E4DD;
-  border-radius: 8px;
-  padding: 8px 10px;
-  font-size: 0.88rem;
-  font-family: inherit;
-  background: #FAFAF8;
-  transition: border-color 0.2s, box-shadow 0.2s;
-  width: 100%;
-}
-.form-group input:focus, .form-group select:focus {
-  outline: none;
-  border-color: #5B7DB1;
-  box-shadow: 0 0 0 3px rgba(91,125,177,0.12);
-  background: #fff;
-}
-.form-group input[type="checkbox"] {
-  width: 20px;
-  height: 20px;
-  margin-top: 4px;
-  accent-color: #5B7DB1;
-}
-.form-group .checkbox-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding-top: 4px;
-}
-.form-group .checkbox-row label { margin-bottom: 0; cursor: pointer; }
-
-.btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  padding: 10px 24px;
-  border: none;
-  border-radius: 10px;
-  font-size: 0.9rem;
-  font-weight: 600;
-  font-family: inherit;
-  cursor: pointer;
-  transition: transform 0.1s, box-shadow 0.2s;
-}
-.btn:active { transform: scale(0.97); }
-.btn-primary {
-  background: linear-gradient(135deg, #5B7DB1, #7B9BCB);
-  color: #fff;
-  box-shadow: 0 2px 8px rgba(91,125,177,0.25);
-}
-.btn-primary:hover { box-shadow: 0 4px 14px rgba(91,125,177,0.35); }
-.btn-secondary {
-  background: #E8E4DD;
-  color: #555;
-}
-.btn-secondary:hover { background: #DDD8CE; }
-.btn-danger {
-  background: #E87474;
-  color: #fff;
-}
-.btn-success {
-  background: #7EB89D;
-  color: #fff;
-}
-.btn-small { padding: 6px 14px; font-size: 0.8rem; border-radius: 8px; }
-.btn-outline {
-  background: transparent;
-  border: 1.5px solid #E8E4DD;
-  color: #666;
-}
-.btn-outline:hover { border-color: #5B7DB1; color: #5B7DB1; }
-
-.form-actions {
-  display: flex;
-  gap: 10px;
-  margin-top: 16px;
-  flex-wrap: wrap;
-}
-.save-feedback {
-  font-size: 0.82rem;
-  padding: 6px 12px;
-  border-radius: 8px;
-  display: none;
-  align-items: center;
-  gap: 6px;
-}
-.save-feedback.success { display: inline-flex; background: #E8F5EE; color: #4A8B6E; }
-.save-feedback.error { display: inline-flex; background: #FDE8E8; color: #C44A4A; }
-
-/* ========== Tabs ========== */
-.tab-bar {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: #fff;
-  display: flex;
-  border-top: 1px solid #E8E4DD;
-  z-index: 100;
-  padding-bottom: env(safe-area-inset-bottom, 0);
-}
-.tab-btn {
-  flex: 1;
-  text-align: center;
-  padding: 8px 4px 6px;
-  font-size: 0.7rem;
-  color: #999;
-  cursor: pointer;
-  transition: color 0.2s;
-  border: none;
-  background: none;
-  font-family: inherit;
-  user-select: none;
-}
-.tab-btn .tab-icon { font-size: 1.3rem; display: block; margin-bottom: 1px; }
-.tab-btn.active { color: #5B7DB1; font-weight: 600; }
-.tab-content { display: none; }
-.tab-content.active { display: block; }
-
-/* ========== Calendar ========== */
-.cal-nav {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 14px;
-}
-.cal-nav .month-label { font-size: 1rem; font-weight: 600; color: #2D2D2D; }
-.cal-nav button {
-  background: none;
-  border: none;
-  font-size: 1.2rem;
-  cursor: pointer;
-  padding: 4px 12px;
-  color: #5B7DB1;
-  border-radius: 6px;
-}
-.cal-nav button:hover { background: #F0EDE8; }
-.cal-grid {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 3px;
-  text-align: center;
-}
-.cal-grid .cal-header {
-  font-size: 0.72rem;
-  color: #999;
-  padding: 6px 0;
-  font-weight: 500;
-}
-.cal-grid .cal-day {
-  padding: 8px 0;
-  font-size: 0.82rem;
-  border-radius: 8px;
-  cursor: pointer;
-  position: relative;
-  min-height: 36px;
-  transition: background 0.15s;
-}
-.cal-grid .cal-day:hover { background: #F0EDE8; }
-.cal-grid .cal-day.other-month { color: #ccc; }
-.cal-grid .cal-day.today { font-weight: 700; color: #5B7DB1; }
-.cal-grid .cal-day.has-data::after {
-  content: '';
-  position: absolute;
-  bottom: 4px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: #7EB89D;
-}
-.cal-grid .cal-day.has-data.full::after { background: #5B7DB1; }
-.cal-grid .cal-day.selected { background: #E8F0FA; outline: 2px solid #5B7DB1; }
-
-/* ========== Stats ========== */
-.stats-controls {
-  display: flex;
-  gap: 6px;
-  margin-bottom: 14px;
-  flex-wrap: wrap;
-}
-.stats-controls .stat-btn {
-  padding: 6px 16px;
-  border: 1.5px solid #E8E4DD;
-  border-radius: 20px;
-  font-size: 0.8rem;
-  background: #fff;
-  cursor: pointer;
-  font-family: inherit;
-  color: #666;
-  transition: all 0.2s;
-}
-.stats-controls .stat-btn.active { background: #5B7DB1; color: #fff; border-color: #5B7DB1; }
-.stats-controls .stat-btn:hover:not(.active) { border-color: #5B7DB1; color: #5B7DB1; }
-
-.chart-wrap {
-  position: relative;
-  max-height: 250px;
-  margin: 0 -8px;
-}
-.stats-summary {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-  gap: 8px;
-  margin-top: 14px;
-}
-.stat-item {
-  background: #F8F6F0;
-  border-radius: 10px;
-  padding: 10px;
-  text-align: center;
-}
-.stat-item .stat-value { font-size: 1.3rem; font-weight: 700; color: #5B7DB1; }
-.stat-item .stat-label { font-size: 0.7rem; color: #999; margin-top: 2px; }
-
-/* ========== Record Detail Modal ========== */
-.modal-overlay {
-  display: none;
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.4);
-  z-index: 200;
-  align-items: flex-end;
-  justify-content: center;
-}
-.modal-overlay.show { display: flex; }
-.modal-content {
-  background: #fff;
-  border-radius: 20px 20px 0 0;
-  padding: 24px 20px;
-  max-width: 720px;
-  width: 100%;
-  max-height: 85vh;
-  overflow-y: auto;
-  animation: slideUp 0.25s ease-out;
-}
-@keyframes slideUp {
-  from { transform: translateY(100%); }
-  to { transform: translateY(0); }
-}
-.modal-close {
-  position: absolute;
-  top: 12px;
-  right: 16px;
-  font-size: 1.4rem;
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: #999;
-}
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
-  position: relative;
-}
-.modal-header h2 { font-size: 1.1rem; color: #2D2D2D; }
-
-/* ========== Settings ========== */
-.settings-section { margin-bottom: 20px; }
-.settings-section h3 { font-size: 0.9rem; color: #666; margin-bottom: 10px; font-weight: 500; }
-.settings-section .desc { font-size: 0.78rem; color: #999; margin-bottom: 8px; line-height: 1.5; }
-
-/* ========== Export ========== */
-.export-area {
-  background: #F8F6F0;
-  border-radius: 8px;
-  padding: 12px;
-  font-size: 0.75rem;
-  font-family: 'Menlo', 'Consolas', monospace;
-  max-height: 200px;
-  overflow: auto;
-  white-space: pre-wrap;
-  word-break: break-all;
-  color: #555;
-  margin-top: 10px;
-  display: none;
-}
-
-/* ========== Reminder ========== */
-.reminder-banner {
-  background: #FFF8E1;
-  border: 1px solid #F0D86A;
-  border-radius: 10px;
-  padding: 12px 16px;
-  margin-bottom: 16px;
-  display: none;
-  align-items: center;
-  gap: 10px;
-  font-size: 0.85rem;
-}
-.reminder-banner.show { display: flex; }
-.reminder-banner .icon { font-size: 1.2rem; }
-
-/* ========== Week View ========== */
-.week-row {
-  display: flex;
-  gap: 4px;
-  margin-bottom: 12px;
-}
-.week-day {
-  flex: 1;
-  text-align: center;
-  padding: 10px 4px;
-  border-radius: 10px;
-  background: #F8F6F0;
-  cursor: pointer;
-  transition: background 0.15s;
-}
-.week-day:hover { background: #F0EDE8; }
-.week-day .wd-name { font-size: 0.7rem; color: #999; }
-.week-day .wd-date { font-size: 0.85rem; font-weight: 600; }
-.week-day .wd-dot {
-  display: inline-block;
-  width: 6px; height: 6px;
-  border-radius: 50%;
-  margin-top: 3px;
-}
-.week-day .wd-dot.has { background: #7EB89D; }
-.week-day.today { background: #E8F0FA; }
-.week-day.active { outline: 2px solid #5B7DB1; }
-
-/* ========== Empty State ========== */
-.empty-state {
-  text-align: center;
-  padding: 40px 20px;
-  color: #999;
-}
-.empty-state .icon { font-size: 2.5rem; margin-bottom: 10px; }
-.empty-state p { font-size: 0.88rem; }
-
-/* ========== Responsive ========== */
-@media (min-width: 600px) {
-  .form-grid { grid-template-columns: 1fr 1fr 1fr; }
-  .modal-content { border-radius: 20px; margin: 40px auto; max-width: 560px; }
-  .modal-overlay { align-items: center; }
-}
-
-/* ========== Scrollbar ========== */
-::-webkit-scrollbar { width: 4px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #DDD8CE; border-radius: 4px; }
+/* template tabs */
+.tpl-tabs{display:flex;gap:4px;margin-bottom:12px;overflow-x:auto;padding-bottom:2px;-webkit-overflow-scrolling:touch}
+.tpl-tab{padding:6px 14px;border-radius:10px;font-size:0.78rem;font-weight:500;border:1.5px solid #E8E4DD;background:#fff;cursor:pointer;white-space:nowrap;transition:all .2s;font-family:inherit;flex-shrink:0}
+.tpl-tab.active{border-color:currentColor;background:color-mix(in srgb, currentColor 18%, #F5F3EE);color:currentColor;font-weight:700}
+.tpl-tab .tpl-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:4px}
+.tpl-tab.active .tpl-dot{background:currentColor!important}
+.tpl-tab:not(.active){color:#666}
+.tpl-tab:not(.active):hover{border-color:#5B7DB1}
+.tpl-content{display:none}
+.tpl-content.active{display:block}
 </style>
 </head>
 <body>
 
-<!-- ========== Header ========== -->
 <header class="header">
-  <div style="display:flex;align-items:center;justify-content:space-between;">
+  <div style="display:flex;align-items:center;justify-content:space-between">
     <div>
       <h1>📋 每日记录</h1>
       <div class="date-display" id="headerDate">加载中…</div>
@@ -447,38 +114,32 @@ body {
   </div>
 </header>
 
-<!-- ========== Reminder Banner ========== -->
-<div class="container" style="padding-bottom:0;">
+<div class="container" style="padding-bottom:0">
   <div class="reminder-banner" id="reminderBanner">
     <span class="icon">⏰</span>
     <span id="reminderText">今天还没有记录，花 2 分钟填一下吧</span>
   </div>
 </div>
 
-<!-- ========== Tab Content: 今天 ========== -->
 <div class="container">
   <div class="tab-content active" id="tabToday">
     <div class="card">
       <div class="card-title">📝 今天怎么样？</div>
-      <div style="display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap;">
-        <button class="btn btn-small btn-secondary" id="modeToggle" onclick="toggleMode()">切换到极简版</button>
-        <span style="font-size:0.78rem;color:#999;align-self:center;" id="editingDateHint">正在编辑：今天</span>
-        <button class="btn btn-small btn-outline" id="backToTodayBtn" onclick="backToToday()" style="display:none;">← 返回今天</button>
+      <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap;align-items:center">
+        <span style="font-size:0.78rem;color:#999" id="editingDateHint">正在编辑：今天</span>
+        <button class="btn btn-small btn-outline" id="backToTodayBtn" onclick="backToToday()" style="display:none">← 返回今天</button>
       </div>
+      <div class="tpl-tabs" id="tplTabs"></div>
       <form id="recordForm" autocomplete="off">
-        <div class="form-grid" id="formFields">
-          <!-- Fields rendered by JS -->
-        </div>
+        <div id="tplContents"></div>
         <div class="form-actions">
           <button type="submit" class="btn btn-primary" id="saveBtn">💾 保存记录</button>
-          <button type="button" class="btn btn-secondary btn-small" onclick="clearToday()">清空今日</button>
           <span class="save-feedback" id="saveFeedback"></span>
         </div>
       </form>
     </div>
   </div>
 
-  <!-- ========== Tab Content: 日历 ========== -->
   <div class="tab-content" id="tabCalendar">
     <div class="card">
       <div class="cal-nav">
@@ -488,39 +149,36 @@ body {
       </div>
       <div class="cal-grid" id="calGrid"></div>
     </div>
-    <div class="card" id="calDetail" style="display:none;">
+    <div class="card" id="calDetail" style="display:none">
       <div class="card-title" id="calDetailTitle">📄 查看记录</div>
       <div id="calDetailBody"></div>
     </div>
   </div>
 
-  <!-- ========== Tab Content: 统计 ========== -->
   <div class="tab-content" id="tabStats">
     <div class="card">
       <div class="card-title">📊 数据趋势</div>
-      <div class="stats-controls" id="statsControls">
-        <button class="stat-btn active" data-range="7">近 7 天</button>
-        <button class="stat-btn" data-range="30">近 30 天</button>
-        <button class="stat-btn" data-range="90">近 90 天</button>
+      <div class="stats-controls" id="tplStatsFilter"></div>
+      <div class="stats-controls" id="statsRangeFilter" style="margin-bottom:8px">
+        <button class="stat-btn active" data-range="7">7天</button>
+        <button class="stat-btn" data-range="30">30天</button>
+        <button class="stat-btn" data-range="90">90天</button>
         <button class="stat-btn" data-range="all">全部</button>
       </div>
-      <div class="chart-wrap">
-        <canvas id="statsChart"></canvas>
-      </div>
+      <div class="chart-wrap"><canvas id="statsChart"></canvas></div>
     </div>
     <div class="card">
-      <div class="card-title">📋 汇总统计</div>
+      <div class="card-title">📋 汇总</div>
       <div class="stats-summary" id="statsSummary"></div>
     </div>
   </div>
 
-  <!-- ========== Tab Content: 管理 ========== -->
   <div class="tab-content" id="tabSettings">
     <div class="card">
       <div class="card-title">⚙️ 数据管理</div>
       <div class="settings-section">
         <h3>📤 导出数据</h3>
-        <div class="desc">导出所有记录为 JSON 或 CSV 格式，下载到本地保存。</div>
+        <div class="desc">导出所有记录为 JSON 或 CSV 格式。</div>
         <div class="form-actions">
           <button class="btn btn-secondary btn-small" onclick="exportJSON()">导出 JSON</button>
           <button class="btn btn-secondary btn-small" onclick="exportCSV()">导出 CSV</button>
@@ -529,69 +187,45 @@ body {
       </div>
       <div class="settings-section">
         <h3>📥 导入数据</h3>
-        <div class="desc">从之前导出的 JSON 文件恢复数据（会合并到现有数据中，相同日期会覆盖）。</div>
-        <input type="file" accept=".json" id="importFile" style="font-size:0.85rem;margin-bottom:8px;display:block;">
+        <div class="desc">从 JSON 文件恢复数据（会合并到现有数据中）。</div>
+        <input type="file" accept=".json" id="importFile" style="font-size:0.85rem;margin-bottom:8px;display:block">
         <button class="btn btn-secondary btn-small" onclick="importData()">导入</button>
       </div>
       <div class="settings-section">
         <h3>📁 数据文件备份</h3>
-        <div class="desc">把数据保存到文件，方便备份或传到其他设备。</div>
-        <div id="fileStorageStatus" style="font-size:0.82rem;padding:8px 12px;background:#F8F6F0;border-radius:8px;margin-bottom:8px;">
-          💡 数据已保存在浏览器缓存中，点下方按钮备份到文件
-        </div>
-        <div class="form-actions" style="flex-wrap:wrap;">
+        <div class="desc">下载 json 文件到手机/电脑保存，或从文件恢复。</div>
+        <div class="form-actions">
           <button class="btn btn-secondary btn-small" onclick="saveToFile()">💾 保存到文件</button>
-          <input type="file" accept=".json" id="loadFileInput" style="display:none;" onchange="loadFromFile(event)">
+          <input type="file" accept=".json" id="loadFileInput" style="display:none" onchange="loadFromFile(event)">
           <button class="btn btn-secondary btn-small" onclick="document.getElementById('loadFileInput').click()">📂 从文件恢复</button>
         </div>
-        <div id="fileSyncFeedback" class="save-feedback" style="margin-top:8px;"></div>
+        <div id="fileSyncFeedback" class="save-feedback" style="margin-top:8px"></div>
       </div>
-    </div>
-    <div class="card">
-      <div class="card-title">📝 批量编辑</div>
-      <div class="desc" style="font-size:0.78rem;color:#999;margin-bottom:12px;line-height:1.5;">
-        适合一次性回填数据：比如从运动手环补睡眠时间、或者来例假后回填周期数据。
+      <div class="settings-section">
+        <h3>📝 批量编辑</h3>
+        <div class="desc">按日期范围批量更新字段。</div>
+        <div id="batchEditContent"></div>
       </div>
-      <div id="batchEditContent"></div>
     </div>
     <div class="card">
       <div class="card-title">💡 使用提示</div>
-      <div style="font-size:0.82rem;color:#666;line-height:1.8;">
-        <p>📌 数据存储在浏览器本地 (localStorage)，清除浏览器缓存会丢失数据，请定期导出备份。</p>
-        <p>📌 手机和电脑用不同的浏览器时数据不互通，如需跨设备同步请导出 JSON 后在另一台设备导入。</p>
-        <p>📌 <strong>设置每日定时提醒：</strong></p>
-        <ol style="padding-left:20px;margin-top:4px;">
-          <li>打开 Windows 搜索 → 输入"任务计划程序"并打开</li>
-          <li>右侧"创建基本任务" → 名称填"每日记录提醒"</li>
-          <li>触发器选"每天" → 设置时间（如 21:00）</li>
-          <li>操作选"启动程序" → 程序填你的浏览器路径</li>
-          <li>参数填此 HTML 文件的完整路径</li>
-        </ol>
-        <p style="margin-top:8px;">📌 打分规则：1=无 2=极轻 3=轻 4=中 5=重 6=极重</p>
-        <p>📌 月经：0=无 1=点滴 2=少 3=中 4=多</p>
-        <p>📌 总体感受（极简版）：1-10，10=最好</p>
+      <div style="font-size:0.8rem;color:#666;line-height:1.8">
+        <p>📌 数据存在浏览器缓存中，不清缓存不会丢。定期备份到文件。</p>
+        <p>📌 每个模板独立记录，填了哪个就存哪个，不影响其他模板。</p>
+        <p>📌 统计页面可以选单个模板，也可以选"综合"看跨模板关联。</p>
+        <p>📌 打分规则：1=无 2=极轻 3=轻 4=中 5=重 6=极重</p>
       </div>
     </div>
   </div>
 </div>
 
-<!-- ========== Tab Bar ========== -->
 <nav class="tab-bar">
-  <button class="tab-btn active" data-tab="today" onclick="switchTab('today')">
-    <span class="tab-icon">📝</span>今天
-  </button>
-  <button class="tab-btn" data-tab="calendar" onclick="switchTab('calendar')">
-    <span class="tab-icon">📅</span>日历
-  </button>
-  <button class="tab-btn" data-tab="stats" onclick="switchTab('stats')">
-    <span class="tab-icon">📊</span>统计
-  </button>
-  <button class="tab-btn" data-tab="settings" onclick="switchTab('settings')">
-    <span class="tab-icon">⚙️</span>管理
-  </button>
+  <button class="tab-btn active" data-tab="today" onclick="switchTab('today')"><span class="tab-icon">📝</span>今天</button>
+  <button class="tab-btn" data-tab="calendar" onclick="switchTab('calendar')"><span class="tab-icon">📅</span>日历</button>
+  <button class="tab-btn" data-tab="stats" onclick="switchTab('stats')"><span class="tab-icon">📊</span>统计</button>
+  <button class="tab-btn" data-tab="settings" onclick="switchTab('settings')"><span class="tab-icon">⚙️</span>管理</button>
 </nav>
 
-<!-- ========== 模态框 ========== -->
 <div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
   <div class="modal-content" onclick="event.stopPropagation()">
     <div class="modal-header">
@@ -602,189 +236,172 @@ body {
   </div>
 </div>
 
-<!-- ========== 打分参考模态框 ========== -->
 <div class="modal-overlay" id="refOverlay" onclick="closeRef()">
-  <div class="modal-content" onclick="event.stopPropagation()" style="max-height:90vh;">
+  <div class="modal-content" onclick="event.stopPropagation()" style="max-height:90vh">
     <div class="modal-header">
       <h2>📖 打分参考</h2>
       <button class="modal-close" onclick="closeRef()">✕</button>
     </div>
-    <div id="refBody" style="font-size:0.85rem;line-height:1.8;color:#444;">
-      <div style="background:#F8F6F0;border-radius:10px;padding:14px;margin-bottom:14px;">
-        <strong style="color:#5B7DB1;">统一打分规则</strong><br>
-        <span style="background:#E87474;color:#fff;padding:1px 8px;border-radius:4px;font-size:0.75rem;">情绪类</span>
-        1=无　2=极轻　3=轻　4=中　5=重　6=极重<br>
-        <span style="background:#9B8EC4;color:#fff;padding:1px 8px;border-radius:4px;font-size:0.75rem;">月经</span>
-        0=无　1=点滴　2=少　3=中　4=多<br>
-        <span style="background:#7EB89D;color:#fff;padding:1px 8px;border-radius:4px;font-size:0.75rem;">极简版</span>
+    <div id="refBody" style="font-size:0.82rem;line-height:1.8;color:#444">
+      <div style="background:#F8F6F0;border-radius:10px;padding:12px;margin-bottom:12px">
+        <strong style="color:#5B7DB1">统一打分规则</strong><br>
+        1=无 2=极轻 3=轻 4=中 5=重 6=极重<br>
+        月经 0=无 1=点滴 2=少 3=中 4=多<br>
         总体感受 1-10，10=最好
       </div>
-      <table style="width:100%;border-collapse:collapse;">
-        <tr style="background:#F0EDE8;"><th style="padding:6px 10px;text-align:left;border-bottom:1px solid #DDD8CE;width:25%;font-size:0.8rem;">字段</th><th style="padding:6px 10px;text-align:left;border-bottom:1px solid #DDD8CE;font-size:0.8rem;">说明</th></tr>
-        <tr><td style="padding:6px 10px;border-bottom:1px solid #F0EDE8;"><strong>周期</strong></td><td style="padding:6px 10px;border-bottom:1px solid #F0EDE8;font-size:0.8rem;">离下次例假还有几天。例假前7天写<strong>-7</strong>，当天写<strong>0</strong>，之后写<strong>+3</strong></td></tr>
-        <tr><td style="padding:6px 10px;border-bottom:1px solid #F0EDE8;"><strong>月经</strong></td><td style="padding:6px 10px;border-bottom:1px solid #F0EDE8;font-size:0.8rem;">0=无　1=点滴　2=少　3=中　4=多</td></tr>
-        <tr><td style="padding:6px 10px;border-bottom:1px solid #F0EDE8;"><strong>睡眠h</strong></td><td style="padding:6px 10px;border-bottom:1px solid #F0EDE8;font-size:0.8rem;">昨晚睡了几小时（写小数也行，比如6.5）</td></tr>
-        <tr><td style="padding:6px 10px;border-bottom:1px solid #F0EDE8;"><strong>低落</strong></td><td style="padding:6px 10px;border-bottom:1px solid #F0EDE8;font-size:0.8rem;">悲伤、提不起劲、什么都没意思</td></tr>
-        <tr><td style="padding:6px 10px;border-bottom:1px solid #F0EDE8;"><strong>紧张</strong></td><td style="padding:6px 10px;border-bottom:1px solid #F0EDE8;font-size:0.8rem;">不安、焦躁、坐不住、心慌</td></tr>
-        <tr><td style="padding:6px 10px;border-bottom:1px solid #F0EDE8;"><strong>烦躁</strong></td><td style="padding:6px 10px;border-bottom:1px solid #F0EDE8;font-size:0.8rem;">易怒、什么都看不顺、想发火</td></tr>
-        <tr><td style="padding:6px 10px;border-bottom:1px solid #F0EDE8;"><strong>起伏</strong></td><td style="padding:6px 10px;border-bottom:1px solid #F0EDE8;font-size:0.8rem;">今天情绪上下幅度有多大</td></tr>
-        <tr><td style="padding:6px 10px;border-bottom:1px solid #F0EDE8;"><strong>消极念头</strong></td><td style="padding:6px 10px;border-bottom:1px solid #F0EDE8;font-size:0.8rem;">想消失、想伤害自己。<strong>没有也要写0</strong>，不要留空</td></tr>
-        <tr><td style="padding:6px 10px;border-bottom:1px solid #F0EDE8;"><strong>敌意念头</strong></td><td style="padding:6px 10px;border-bottom:1px solid #F0EDE8;font-size:0.8rem;">想伤害别人。<strong>没有也要写0</strong>，不要留空</td></tr>
-        <tr><td style="padding:6px 10px;border-bottom:1px solid #F0EDE8;"><strong>翻转</strong></td><td style="padding:6px 10px;border-bottom:1px solid #F0EDE8;font-size:0.8rem;">今天有没有"一会儿难受、过会儿又好"的情况，有就打✓</td></tr>
-        <tr><td style="padding:6px 10px;border-bottom:1px solid #F0EDE8;"><strong>精力低</strong></td><td style="padding:6px 10px;border-bottom:1px solid #F0EDE8;font-size:0.8rem;">累、没劲。<strong>分数越高越累</strong>（6=完全没力气）</td></tr>
-        <tr><td style="padding:6px 10px;border-bottom:1px solid #F0EDE8;"><strong>身体痛</strong></td><td style="padding:6px 10px;border-bottom:1px solid #F0EDE8;font-size:0.8rem;">头痛、胸胀、肚子痛、关节痛，任何一处疼就打分</td></tr>
-        <tr><td style="padding:6px 10px;border-bottom:1px solid #F0EDE8;"><strong>完成度</strong></td><td style="padding:6px 10px;border-bottom:1px solid #F0EDE8;font-size:0.8rem;">今天事情做得怎么样。<strong>6=完全做不了事</strong>，1=一切正常</td></tr>
-        <tr><td style="padding:6px 10px;border-bottom:1px solid #F0EDE8;"><strong>备注</strong></td><td style="padding:6px 10px;border-bottom:1px solid #F0EDE8;font-size:0.8rem;">一两个词就行，例如"和某人吵架"、"加班到10点"、"吃药1片"</td></tr>
-      </table>
-      <div style="margin-top:14px;padding:10px;background:#FFF8E1;border-radius:8px;font-size:0.78rem;">
-        <strong>⏰ 什么时候填：</strong>每天睡前1-2分钟。漏了一天不要补，留空也是数据。
-      </div>
+      <div id="refDetail"></div>
     </div>
   </div>
 </div>
-
-<!-- ========== 悬浮参考按钮 ========== -->
-<div id="refBtn" onclick="openRef()" style="position:fixed;bottom:80px;right:16px;width:44px;height:44px;border-radius:50%;background:#5B7DB1;color:#fff;display:flex;align-items:center;justify-content:center;font-size:1.2rem;font-weight:bold;box-shadow:0 2px 12px rgba(91,125,177,0.4);cursor:pointer;z-index:99;border:none;" title="查看打分说明">?</div>
+<div id="refBtn" onclick="openRef()" style="position:fixed;bottom:80px;right:16px;width:44px;height:44px;border-radius:50%;background:#5B7DB1;color:#fff;display:flex;align-items:center;justify-content:center;font-size:1.2rem;font-weight:bold;box-shadow:0 2px 12px rgba(91,125,177,0.4);cursor:pointer;z-index:99;border:none">?</div>
 
 <script>
 // ============================================================
-//  DATA LAYER
+//  TEMPLATES
 // ============================================================
-const STORAGE_KEY = 'mood_recorder_records';
-const SETTINGS_KEY = 'mood_recorder_settings';
-
-const FIELD_DEFS = {
-  full: [
-    { key: 'cycle',      label: '周期',      hint: '离下次例假还有几天', desc: '例假前7天写-7，当天写0，之后写+3', type: 'number', min: -20, max: 20, step: 1 },
-    { key: 'period',     label: '月经',      hint: '0-4', desc: '0=无 1=点滴 2=少 3=中 4=多', type: 'number', min: 0, max: 4, step: 1 },
-    { key: 'sleep',      label: '睡眠(h)',   hint: '小时', desc: '昨晚睡了几小时，可写小数如6.5', type: 'number', min: 0, max: 16, step: 0.5 },
-    { key: 'low',        label: '低落',      hint: '1-6', desc: '悲伤、提不起劲、什么都没意思', type: 'number', min: 1, max: 6, step: 1 },
-    { key: 'anxious',    label: '紧张',      hint: '1-6', desc: '不安、焦躁、坐不住、心慌', type: 'number', min: 1, max: 6, step: 1 },
-    { key: 'irritable',  label: '烦躁',      hint: '1-6', desc: '易怒、什么都看不顺、想发火', type: 'number', min: 1, max: 6, step: 1 },
-    { key: 'mood_swing', label: '起伏',      hint: '1-6', desc: '今天情绪上下幅度有多大', type: 'number', min: 1, max: 6, step: 1 },
-    { key: 'neg_thoughts', label: '消极念头',  hint: '0-6', desc: '想消失、想伤害自己。没有也要写0', type: 'number', min: 0, max: 6, step: 1 },
-    { key: 'hostile_thoughts', label: '敌意念头', hint: '0-6', desc: '想伤害别人。没有也要写0', type: 'number', min: 0, max: 6, step: 1 },
-    { key: 'flip',       label: '翻转',      hint: '时好时坏', desc: '有没有"一会儿难受、过会儿又好"的情况', type: 'checkbox' },
-    { key: 'low_energy', label: '精力低',    hint: '1-6，越累越高', desc: '累、没劲。6=完全没力气', type: 'number', min: 1, max: 6, step: 1 },
-    { key: 'body_pain',  label: '身体痛',    hint: '1-6', desc: '头痛、胸胀、肚子痛、关节痛，任何一处疼就打分', type: 'number', min: 1, max: 6, step: 1 },
-    { key: 'completion', label: '完成度',    hint: '1-6，越高越差', desc: '今天事情做得怎样。6=完全做不了，1=一切正常', type: 'number', min: 1, max: 6, step: 1 },
-    { key: 'notes',      label: '备注',      hint: '一两个词即可', desc: '如"和某人吵架"、"加班到10点"、"吃药1片"', type: 'text' },
-  ],
-  minimal: [
-    { key: 'cycle',      label: '周期',      hint: '离下次例假还有几天', desc: '例假前7天写-7，当天写0，之后写+3', type: 'number', min: -20, max: 20, step: 1 },
-    { key: 'period',     label: '月经',      hint: '0-4', desc: '0=无 1=点滴 2=少 3=中 4=多', type: 'number', min: 0, max: 4, step: 1 },
-    { key: 'neg_thoughts', label: '消极念头',  hint: '0-6', desc: '想消失、想伤害自己。没有也要写0', type: 'number', min: 0, max: 6, step: 1 },
-    { key: 'overall',    label: '总体感受',  hint: '1-10，10=好', desc: '今天整体感觉，1=最差 10=最好', type: 'number', min: 1, max: 10, step: 1 },
-    { key: 'simple_note', label: '今天一句话', hint: '', desc: '一两个词即可', type: 'text' },
-  ]
+const TPL = {
+  mood: {
+    id:'mood', name:'经前情绪', icon:'🌸', color:'#9B8EC4', hasModes:true,
+    fields: {
+      full: [
+        {key:'cycle',label:'周期',hint:'离下次例假',desc:'例假前7天写-7，当天写0，之后写+3',type:'number',min:-20,max:20,step:1},
+        {key:'period',label:'月经',hint:'0-4',desc:'0=无 1=点滴 2=少 3=中 4=多',type:'number',min:0,max:4,step:1},
+        {key:'sleep',label:'睡眠(h)',hint:'小时',desc:'昨晚睡了几小时，可写小数',type:'number',min:0,max:16,step:0.5},
+        {key:'low',label:'低落',hint:'1-6',desc:'悲伤、提不起劲',type:'number',min:1,max:6,step:1},
+        {key:'anxious',label:'紧张',hint:'1-6',desc:'不安、焦躁、心慌',type:'number',min:1,max:6,step:1},
+        {key:'irritable',label:'烦躁',hint:'1-6',desc:'易怒、想发火',type:'number',min:1,max:6,step:1},
+        {key:'mood_swing',label:'起伏',hint:'1-6',desc:'情绪上下幅度',type:'number',min:1,max:6,step:1},
+        {key:'neg_thoughts',label:'消极念头',hint:'0-6',desc:'想消失。没有也写0',type:'number',min:0,max:6,step:1},
+        {key:'hostile_thoughts',label:'敌意念头',hint:'0-6',desc:'想伤害别人。没有也写0',type:'number',min:0,max:6,step:1},
+        {key:'flip',label:'翻转',hint:'',desc:'一会儿难受一会儿好',type:'checkbox'},
+        {key:'low_energy',label:'精力低',hint:'1-6',desc:'累、没劲。6=完全没力气',type:'number',min:1,max:6,step:1},
+        {key:'body_pain',label:'身体痛',hint:'1-6',desc:'头痛、胸胀、肚子痛等',type:'number',min:1,max:6,step:1},
+        {key:'completion',label:'完成度',hint:'1-6',desc:'6=做不了 1=正常',type:'number',min:1,max:6,step:1},
+        {key:'notes',label:'备注',hint:'',desc:'如"加班"、"吃药1片"',type:'text'}
+      ],
+      minimal: [
+        {key:'cycle',label:'周期',hint:'',desc:'离下次例假还有几天',type:'number',min:-20,max:20,step:1},
+        {key:'period',label:'月经',hint:'0-4',desc:'0=无 1=点滴 2=少 3=中 4=多',type:'number',min:0,max:4,step:1},
+        {key:'neg_thoughts',label:'消极念头',hint:'0-6',desc:'想消失。没有也写0',type:'number',min:0,max:6,step:1},
+        {key:'overall',label:'总体感受',hint:'1-10',desc:'10=最好',type:'number',min:1,max:10,step:1},
+        {key:'simple_note',label:'今天一句话',hint:'',desc:'',type:'text'}
+      ]
+    }
+  },
+  headache: {
+    id:'headache', name:'头痛', icon:'🤕', color:'#E8A87C', hasModes:false,
+    fields: [
+      {key:'pain_level',label:'疼痛程度',hint:'1-6',desc:'',type:'number',min:1,max:6,step:1},
+      {key:'pain_type',label:'头痛类型',hint:'',desc:'',type:'select',options:['紧张性（勒紧感）','偏头痛（单侧搏动）','丛集性（眼眶剧痛）','鼻窦性（前额）','颈源性（脖子往上）','说不清/其他']},
+      {key:'pain_location',label:'疼痛位置',hint:'',desc:'',type:'select',options:['前额/太阳穴','单侧（左）','单侧（右）','后脑勺','眼眶周围','整个头','说不清']},
+      {key:'duration_hours',label:'持续小时',hint:'',desc:'',type:'number',min:0,max:72,step:0.5},
+      {key:'triggers',label:'可能诱因',hint:'',desc:'如：没睡好、喝了咖啡、天气变化',type:'text'},
+      {key:'nausea',label:'恶心',hint:'',desc:'',type:'checkbox'},
+      {key:'light_sensitive',label:'怕光',hint:'',desc:'',type:'checkbox'},
+      {key:'medication',label:'服药',hint:'',desc:'药名+剂量',type:'text'},
+      {key:'med_effect',label:'药效',hint:'1-5',desc:'5=完全缓解',type:'number',min:1,max:5,step:1},
+      {key:'notes',label:'备注',hint:'',desc:'',type:'text'}
+    ]
+  },
+  cold: {
+    id:'cold', name:'感冒', icon:'🤧', color:'#7EB89D', hasModes:false,
+    fields: [
+      {key:'temperature',label:'体温',hint:'℃',desc:'',type:'number',min:35,max:42,step:0.1},
+      {key:'sore_throat',label:'喉咙痛',hint:'1-6',desc:'',type:'number',min:0,max:6,step:1},
+      {key:'cough',label:'咳嗽',hint:'1-6',desc:'',type:'number',min:0,max:6,step:1},
+      {key:'runny_nose',label:'流鼻涕',hint:'1-6',desc:'',type:'number',min:0,max:6,step:1},
+      {key:'headache',label:'头痛',hint:'1-6',desc:'',type:'number',min:0,max:6,step:1},
+      {key:'body_ache',label:'全身酸痛',hint:'1-6',desc:'',type:'number',min:0,max:6,step:1},
+      {key:'smell_taste',label:'嗅觉/味觉',hint:'',desc:'',type:'select',options:['正常','减退','丧失']},
+      {key:'antigen',label:'抗原',hint:'',desc:'',type:'select',options:['未测','阴性','阳性']},
+      {key:'medication',label:'服药',hint:'',desc:'',type:'text'},
+      {key:'notes',label:'备注',hint:'',desc:'',type:'text'}
+    ]
+  },
+  exercise: {
+    id:'exercise', name:'运动', icon:'🏃', color:'#E8C87C', hasModes:false,
+    fields: [
+      {key:'exercise_type',label:'运动类型',hint:'',desc:'',type:'select',options:['跑步','力量','瑜伽','游泳','骑行','散步','球类','其他']},
+      {key:'duration_min',label:'时长(分钟)',hint:'',desc:'',type:'number',min:0,max:600,step:5},
+      {key:'intensity',label:'强度',hint:'1-5',desc:'5=最大强度',type:'number',min:1,max:5,step:1},
+      {key:'pain_location',label:'疼痛位置',hint:'',desc:'运动后哪里疼',type:'select',options:['无','颈','肩','腰','膝','踝','手腕','其他']},
+      {key:'pain_level',label:'疼痛程度',hint:'1-6',desc:'',type:'number',min:0,max:6,step:1},
+      {key:'affect_activity',label:'影响活动',hint:'1-5',desc:'5=完全不能动',type:'number',min:1,max:5,step:1},
+      {key:'stretched',label:'拉伸',hint:'',desc:'运动后是否拉伸',type:'checkbox'},
+      {key:'notes',label:'备注',hint:'',desc:'',type:'text'}
+    ]
+  }
 };
 
-const FIELD_DESC_MAP = {};
-[...FIELD_DEFS.full, ...FIELD_DEFS.minimal].forEach(f => { FIELD_DESC_MAP[f.key] = f.desc; });
+const TPL_ORDER = ['mood','headache','cold','exercise'];
 
 // ============================================================
-//  文件存储
+//  DATA LAYER
+// ============================================================
+const STORAGE_KEY = 'mr_records_v2';
+const OLD_KEY = 'mood_recorder_records';
+const SETTINGS_KEY = 'mr_settings';
 
 function getRecords() {
   try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; } catch { return {}; }
 }
-
 function saveRecords(records) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
 }
-
-function saveToFile() {
-  const records = getRecords();
-  if (Object.keys(records).length === 0) {
-    showFileFeedback('暂无数据可保存', 'error');
-    return;
-  }
-  const json = JSON.stringify(records, null, 2);
-  const blob = new Blob([json], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'mood_data_' + todayStr() + '.json';
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-  showFileFeedback('✅ 已保存到文件，请选择保存位置', 'success');
-}
-
-function loadFromFile(event) {
-  const file = event.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = function(e) {
-    try {
-      const fileRecords = JSON.parse(e.target.result);
-      const localRecords = getRecords();
-      let merged = false;
-      Object.keys(fileRecords).forEach(date => {
-        if (!localRecords[date]) {
-          localRecords[date] = fileRecords[date];
-          merged = true;
-        }
-      });
-      if (merged) {
-        saveRecords(localRecords);
-        showFileFeedback('✅ 已合并 ' + Object.keys(fileRecords).length + ' 条记录', 'success');
-      } else {
-        showFileFeedback('✅ 文件中的记录已存在，无需合并', 'success');
-      }
-      updateHeader();
-      renderCalendar();
-      renderStats();
-    } catch (err) {
-      showFileFeedback('⚠️ 文件格式错误：' + err.message, 'error');
-    }
-  };
-  reader.readAsText(file);
-  event.target.value = '';
-}
-
-function showFileFeedback(msg, type) {
-  const el = document.getElementById('fileSyncFeedback');
-  if (!el) return;
-  el.textContent = type === 'success' ? '✅ ' + msg : '⚠️ ' + msg;
-  el.className = 'save-feedback ' + type;
-  setTimeout(() => { el.className = 'save-feedback'; }, 4000);
-}
-
 function getSettings() {
-  try { return JSON.parse(localStorage.getItem(SETTINGS_KEY)) || { mode: 'full' }; } catch { return { mode: 'full' }; }
+  try { return JSON.parse(localStorage.getItem(SETTINGS_KEY)) || { mode: 'full', tpl: 'mood' }; } catch { return { mode: 'full', tpl: 'mood' }; }
 }
-
 function saveSettings(s) {
   localStorage.setItem(SETTINGS_KEY, JSON.stringify(s));
 }
 
+// 迁移旧数据
+function migrateOldData() {
+  try {
+    const old = JSON.parse(localStorage.getItem(OLD_KEY));
+    if (!old) return false;
+    const v2 = getRecords();
+    let changed = false;
+    Object.keys(old).forEach(date => {
+      const d = old[date];
+      if (d && typeof d === 'object' && !d.mood && !d.headache && ('cycle' in d || 'low' in d || 'sleep' in d)) {
+        v2[date] = v2[date] || {};
+        v2[date].mood = d;
+        changed = true;
+      }
+    });
+    if (changed) {
+      saveRecords(v2);
+      localStorage.removeItem(OLD_KEY);
+    }
+    return changed;
+  } catch { return false; }
+}
+
 function todayStr() {
   const d = new Date();
-  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
 }
-
 function formatDate(str) {
-  const d = new Date(str + 'T00:00:00');
-  return d.getFullYear() + '年' + (d.getMonth()+1) + '月' + d.getDate() + '日';
+  const d = new Date(str+'T00:00:00');
+  return d.getFullYear()+'年'+(d.getMonth()+1)+'月'+d.getDate()+'日';
 }
-
 function dayOfWeek(str) {
-  const d = new Date(str + 'T00:00:00');
-  const names = ['日','一','二','三','四','五','六'];
-  return '周' + names[d.getDay()];
+  const d = new Date(str+'T00:00:00');
+  return '周'+(['日','一','二','三','四','五','六'])[d.getDay()];
 }
 
 // ============================================================
-//  APP STATE
+//  STATE
 // ============================================================
 let state = {
   currentDate: todayStr(),
-  mode: 'full',
+  activeTpl: 'mood',
+  moodMode: 'full',
   calYear: new Date().getFullYear(),
   calMonth: new Date().getMonth(),
   statsRange: 7,
+  statsTpl: 'all',
   chartInstance: null,
 };
 
@@ -792,32 +409,40 @@ let state = {
 //  TAB SWITCHING
 // ============================================================
 function switchTab(tab) {
-  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-  document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-  document.getElementById('tab' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.add('active');
+  document.querySelectorAll('.tab-content').forEach(el=>el.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(el=>el.classList.remove('active'));
+  document.getElementById('tab'+tab.charAt(0).toUpperCase()+tab.slice(1)).classList.add('active');
   document.querySelector(`.tab-btn[data-tab="${tab}"]`).classList.add('active');
-  if (tab === 'calendar') renderCalendar();
-  if (tab === 'stats') renderStats();
-  if (tab === 'settings') renderBatchEdit();
+  if (tab==='calendar') renderCalendar();
+  if (tab==='stats') renderStats();
+  if (tab==='settings') renderBatchEdit();
 }
 
 // ============================================================
 //  HEADER
 // ============================================================
 function updateHeader() {
-  document.getElementById('headerDate').textContent = formatDate(state.currentDate) + ' ' + dayOfWeek(state.currentDate);
+  document.getElementById('headerDate').textContent = formatDate(state.currentDate)+' '+dayOfWeek(state.currentDate);
   const records = getRecords();
   const badge = document.getElementById('headerStatus');
-  if (records[state.currentDate]) {
-    badge.textContent = '✅ 今日已填';
-    badge.className = 'status-badge done';
+  const today = records[state.currentDate];
+  if (today) {
+    const tpls = TPL_ORDER.filter(t => today[t] && Object.keys(today[t]).length > 0);
+    if (tpls.length) {
+      badge.textContent = '✅ '+tpls.length+'项已填';
+      badge.className = 'status-badge done';
+    } else {
+      badge.textContent = '⏳ 今日未填';
+      badge.className = 'status-badge';
+    }
   } else {
     badge.textContent = '⏳ 今日未填';
     badge.className = 'status-badge';
   }
-  // Reminder banner
   const banner = document.getElementById('reminderBanner');
-  if (!records[state.currentDate]) {
+  const todayData = records[state.currentDate];
+  const hasData = todayData && TPL_ORDER.some(t => todayData[t] && Object.keys(todayData[t]).length>0);
+  if (!hasData) {
     banner.classList.add('show');
     document.getElementById('reminderText').textContent = '今天还没有记录，花 2 分钟填一下吧 🌙';
   } else {
@@ -828,63 +453,92 @@ function updateHeader() {
 // ============================================================
 //  FORM
 // ============================================================
-function toggleMode() {
-  const s = getSettings();
-  s.mode = s.mode === 'full' ? 'minimal' : 'full';
-  saveSettings(s);
-  state.mode = s.mode;
-  renderForm();
-  loadToday();
-  document.getElementById('modeToggle').textContent = s.mode === 'full' ? '切换到极简版' : '切换到完整版';
-}
-
-function renderForm() {
-  const container = document.getElementById('formFields');
-  const fields = FIELD_DEFS[state.mode];
+function renderTplTabs() {
+  const container = document.getElementById('tplTabs');
   let html = '';
-  fields.forEach(f => {
-    if (f.type === 'checkbox') {
-      html += `<div class="form-group full-width">
-        <label>${f.label} <span class="hint">${f.desc}</span></label>
-        <div class="checkbox-row">
-          <input type="checkbox" id="field_${f.key}" data-key="${f.key}">
-          <label for="field_${f.key}">今天有"一会儿难受、过会儿又好"的情况</label>
-        </div>
-      </div>`;
-    } else if (f.type === 'text') {
-      html += `<div class="form-group full-width">
-        <label>${f.label} <span class="hint">${f.desc}</span></label>
-        <input type="text" id="field_${f.key}" data-key="${f.key}" placeholder="${f.hint || '输入...'}">
-      </div>`;
-    } else {
-      html += `<div class="form-group">
-        <label>${f.label} <span class="hint">${f.desc}</span></label>
-        <input type="number" id="field_${f.key}" data-key="${f.key}" min="${f.min}" max="${f.max}" step="${f.step || 1}" placeholder="${f.min}-${f.max}">
-      </div>`;
-    }
+  TPL_ORDER.forEach(tid => {
+    const t = TPL[tid];
+    const active = tid === state.activeTpl ? 'active' : '';
+    html += `<button class="tpl-tab ${active}" style="border-color:${t.color};${active?'':'color:'+t.color}" onclick="switchTpl('${tid}')"><span class="tpl-dot" style="background:${t.color}"></span>${t.icon} ${t.name}</button>`;
   });
   container.innerHTML = html;
+}
+
+function switchTpl(tid) {
+  state.activeTpl = tid;
+  renderTplTabs();
+  renderTplContent(tid);
+  loadToday();
+}
+
+function renderTplContent(tid) {
+  const container = document.getElementById('tplContents');
+  let html = '';
+  TPL_ORDER.forEach(tid2 => {
+    const t = TPL[tid2];
+    const active = tid2 === tid ? 'active' : '';
+    html += `<div class="tpl-content ${active}" id="tplc_${tid2}">`;
+    if (t.hasModes) {
+      html += `<div style="margin-bottom:10px;display:flex;gap:6px;align-items:center">
+        <button class="btn btn-small btn-secondary" id="modeToggle_${tid2}" onclick="toggleMoodMode()">${state.moodMode==='full'?'切换到极简版':'切换到完整版'}</button>
+        <span style="font-size:0.75rem;color:#999">${state.moodMode==='full'?'完整版':'极简版'}</span>
+      </div>`;
+    }
+    const fields = t.hasModes ? t.fields[state.moodMode] : t.fields;
+    html += '<div class="form-grid">';
+    fields.forEach(f => {
+      if (f.type==='checkbox') {
+        html += `<div class="form-group full-width"><label>${f.label} ${f.desc?'<span class="hint">'+f.desc+'</span>':''}</label>
+          <div class="checkbox-row"><input type="checkbox" id="f_${tid2}_${f.key}" data-tpl="${tid2}" data-key="${f.key}">
+          <label for="f_${tid2}_${f.key}">${f.desc||'是'}</label></div></div>`;
+      } else if (f.type==='select') {
+        html += `<div class="form-group"><label>${f.label}</label><select id="f_${tid2}_${f.key}" data-tpl="${tid2}" data-key="${f.key}">
+          <option value="">—</option>${f.options.map(o=>'<option>'+o+'</option>').join('')}</select></div>`;
+      } else if (f.type==='text') {
+        html += `<div class="form-group full-width"><label>${f.label} ${f.desc?'<span class="hint">'+f.desc+'</span>':''}</label>
+          <input type="text" id="f_${tid2}_${f.key}" data-tpl="${tid2}" data-key="${f.key}" placeholder="${f.hint||'输入...'}"></div>`;
+      } else {
+        html += `<div class="form-group"><label>${f.label} ${f.desc?'<span class="hint">'+f.desc+'</span>':''}</label>
+          <input type="number" id="f_${tid2}_${f.key}" data-tpl="${tid2}" data-key="${f.key}" min="${f.min}" max="${f.max}" step="${f.step||1}" placeholder="${f.hint||f.min+'-'+f.max}"></div>`;
+      }
+    });
+    html += '</div></div>';
+  });
+  container.innerHTML = html;
+}
+
+function toggleMoodMode() {
+  state.moodMode = state.moodMode === 'full' ? 'minimal' : 'full';
+  const s = getSettings();
+  s.mode = state.moodMode;
+  saveSettings(s);
+  renderTplContent(state.activeTpl);
+  loadToday();
+  const btn = document.getElementById('modeToggle_'+state.activeTpl);
+  if (btn) btn.textContent = state.moodMode==='full'?'切换到极简版':'切换到完整版';
 }
 
 function loadToday() {
   const records = getRecords();
   const data = records[state.currentDate] || {};
-  document.querySelectorAll('#formFields [data-key]').forEach(el => {
-    const key = el.dataset.key;
-    if (el.type === 'checkbox') {
-      el.checked = data[key] === true || data[key] === 'true';
-    } else {
-      el.value = (data[key] !== undefined && data[key] !== null) ? data[key] : '';
-    }
+  TPL_ORDER.forEach(tid => {
+    const tplData = data[tid] || {};
+    document.querySelectorAll(`#tplc_${tid} [data-key]`).forEach(el => {
+      const key = el.dataset.key;
+      if (el.type==='checkbox') {
+        el.checked = tplData[key]===true || tplData[key]==='true';
+      } else {
+        el.value = (tplData[key]!==undefined && tplData[key]!==null) ? tplData[key] : '';
+      }
+    });
   });
-  // 更新编辑日期提示
   const hint = document.getElementById('editingDateHint');
   const backBtn = document.getElementById('backToTodayBtn');
   if (state.currentDate === todayStr()) {
     hint.textContent = '正在编辑：今天';
     backBtn.style.display = 'none';
   } else {
-    hint.textContent = '正在编辑：' + formatDate(state.currentDate) + '（点击日历可切换）';
+    hint.textContent = '正在编辑：'+formatDate(state.currentDate);
     backBtn.style.display = 'inline-flex';
   }
   updateHeader();
@@ -897,102 +551,88 @@ function backToToday() {
   loadToday();
 }
 
-function clearToday() {
-  if (!confirm('确定清空今日记录？')) return;
-  document.querySelectorAll('#formFields [data-key]').forEach(el => {
-    if (el.type === 'checkbox') el.checked = false;
-    else el.value = '';
-  });
-  showFeedback('已清空', 'success');
-}
-
-function showFeedback(msg, type) {
-  const el = document.getElementById('saveFeedback');
-  el.textContent = type === 'success' ? '✅ ' + msg : '❌ ' + msg;
-  el.className = 'save-feedback ' + type;
-  setTimeout(() => { el.className = 'save-feedback'; }, 3000);
-}
-
 document.getElementById('recordForm').addEventListener('submit', function(e) {
   e.preventDefault();
   const records = getRecords();
-  const data = records[state.currentDate] || {};
-  document.querySelectorAll('#formFields [data-key]').forEach(el => {
-    const key = el.dataset.key;
-    if (el.type === 'checkbox') {
-      data[key] = el.checked;
-    } else if (el.type === 'number') {
-      data[key] = el.value !== '' ? parseFloat(el.value) : null;
-    } else {
-      data[key] = el.value || '';
-    }
+  if (!records[state.currentDate]) records[state.currentDate] = {};
+  const dayData = records[state.currentDate];
+  let hasAny = false;
+  TPL_ORDER.forEach(tid => {
+    if (!dayData[tid]) dayData[tid] = {};
+    const tplData = dayData[tid];
+    let filled = false;
+    document.querySelectorAll(`#tplc_${tid} [data-key]`).forEach(el => {
+      const key = el.dataset.key;
+      if (el.type==='checkbox') {
+        tplData[key] = el.checked;
+        if (el.checked) filled = true;
+      } else if (el.type==='number') {
+        tplData[key] = el.value !== '' ? parseFloat(el.value) : null;
+        if (el.value !== '') filled = true;
+      } else {
+        tplData[key] = el.value || '';
+        if (el.value) filled = true;
+      }
+    });
+    if (filled) { tplData._updated = new Date().toISOString(); hasAny = true; }
+    else delete dayData[tid];
   });
-  data._mode = state.mode;
-  data._updated = new Date().toISOString();
-  records[state.currentDate] = data;
+  if (!hasAny) { showFeedback('请至少填一项', 'error'); return; }
+  records[state.currentDate] = dayData;
   saveRecords(records);
   updateHeader();
   showFeedback('已保存！', 'success');
 });
+
+function showFeedback(msg, type) {
+  const el = document.getElementById('saveFeedback');
+  el.textContent = type==='success'?'✅ '+msg:'❌ '+msg;
+  el.className = 'save-feedback '+type;
+  setTimeout(()=>{el.className='save-feedback'},3000);
+}
 
 // ============================================================
 //  CALENDAR
 // ============================================================
 function calMonth(delta) {
   state.calMonth += delta;
-  if (state.calMonth < 0) { state.calMonth = 11; state.calYear--; }
-  if (state.calMonth > 11) { state.calMonth = 0; state.calYear++; }
+  if (state.calMonth<0){state.calMonth=11;state.calYear--}
+  if (state.calMonth>11){state.calMonth=0;state.calYear++}
   renderCalendar();
 }
 
 function renderCalendar() {
   const records = getRecords();
-  const year = state.calYear;
-  const month = state.calMonth;
-  document.getElementById('calMonthLabel').textContent = year + '年' + (month+1) + '月';
-
-  const firstDay = new Date(year, month, 1).getDay();
-  const daysInMonth = new Date(year, month + 1, 0).getDate();
-  const daysInPrev = new Date(year, month, 0).getDate();
-
-  const today = todayStr();
-  let html = '';
-  const headers = ['日','一','二','三','四','五','六'];
-  headers.forEach(h => { html += `<div class="cal-header">${h}</div>`; });
-
-  // Previous month
-  for (let i = firstDay - 1; i >= 0; i--) {
-    const d = daysInPrev - i;
-    const dateStr = (year) + '-' + String(month).padStart(2,'0') + '-' + String(d).padStart(2,'0');
-    // actually prev month
-    const prevMonth = month === 0 ? 11 : month - 1;
-    const prevYear = month === 0 ? year - 1 : year;
-    const ds = prevYear + '-' + String(prevMonth+1).padStart(2,'0') + '-' + String(d).padStart(2,'0');
-    const has = records[ds] ? 'has-data' : '';
-    html += `<div class="cal-day other-month ${has}" onclick="viewDay('${ds}')">${d}</div>`;
+  const y=state.calYear,m=state.calMonth;
+  document.getElementById('calMonthLabel').textContent = y+'年'+(m+1)+'月';
+  const firstDay=new Date(y,m,1).getDay(), daysIn=new Date(y,m+1,0).getDate(), daysPrev=new Date(y,m,0).getDate();
+  const today=todayStr();
+  let html='';
+  ['日','一','二','三','四','五','六'].forEach(h=>html+=`<div class="cal-header">${h}</div>`);
+  for(let i=firstDay-1;i>=0;i--){
+    const prevM=m===0?11:m-1, prevY=m===0?y-1:y;
+    const ds=prevY+'-'+String(prevM+1).padStart(2,'0')+'-'+String(daysPrev-i).padStart(2,'0');
+    const data=records[ds];
+    html+=`<div class="cal-day other-month" onclick="viewDay('${ds}')">${daysPrev-i}</div>`;
   }
-
-  // Current month
-  for (let d = 1; d <= daysInMonth; d++) {
-    const ds = year + '-' + String(month+1).padStart(2,'0') + '-' + String(d).padStart(2,'0');
-    const isToday = ds === today ? 'today' : '';
-    const has = records[ds] ? 'has-data' : '';
-    const isFull = records[ds] && records[ds]._mode === 'full' ? 'full' : '';
-    html += `<div class="cal-day ${isToday} ${has} ${isFull}" onclick="viewDay('${ds}')">${d}</div>`;
+  for(let d=1;d<=daysIn;d++){
+    const ds=y+'-'+String(m+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+    const isToday=ds===today?'today':'';
+    const data=records[ds];
+    let dots='';
+    if(data){
+      const colors=TPL_ORDER.filter(t=>data[t]&&Object.keys(data[t]).length>1).map(t=>TPL[t].color);
+      if(colors.length) dots='<div class="dots-wrap">'+colors.map(c=>`<span class="dot" style="background:${c}"></span>`).join('')+'</div>';
+    }
+    html+=`<div class="cal-day ${isToday}" onclick="viewDay('${ds}')">${d}${dots}</div>`;
   }
-
-  // Next month
-  const totalCells = firstDay + daysInMonth;
-  const remaining = (7 - totalCells % 7) % 7;
-  const nextMonth = month === 11 ? 0 : month + 1;
-  const nextYear = month === 11 ? year + 1 : year;
-  for (let d = 1; d <= remaining; d++) {
-    const ds = nextYear + '-' + String(nextMonth+1).padStart(2,'0') + '-' + String(d).padStart(2,'0');
-    const has = records[ds] ? 'has-data' : '';
-    html += `<div class="cal-day other-month ${has}" onclick="viewDay('${ds}')">${d}</div>`;
+  const total=firstDay+daysIn, rem=(7-total%7)%7;
+  const nextM=m===11?0:m+1, nextY=m===11?y+1:y;
+  for(let d=1;d<=rem;d++){
+    const ds=nextY+'-'+String(nextM+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+    html+=`<div class="cal-day other-month" onclick="viewDay('${ds}')">${d}</div>`;
   }
-
-  document.getElementById('calGrid').innerHTML = html;
+  document.getElementById('calGrid').innerHTML=html;
 }
 
 function viewDay(dateStr) {
@@ -1001,63 +641,54 @@ function viewDay(dateStr) {
   const detail = document.getElementById('calDetail');
   const title = document.getElementById('calDetailTitle');
   const body = document.getElementById('calDetailBody');
-
   if (!data) {
-    detail.style.display = 'block';
-    title.textContent = '📄 ' + formatDate(dateStr) + ' ' + dayOfWeek(dateStr);
-    body.innerHTML = '<div class="empty-state"><div class="icon">📭</div><p>当天没有记录</p></div>';
+    detail.style.display='block';
+    title.textContent='📄 '+formatDate(dateStr)+' '+dayOfWeek(dateStr);
+    body.innerHTML='<div class="empty-state"><div class="icon">📭</div><p>当天没有记录</p></div>';
     return;
   }
-
-  detail.style.display = 'block';
-  title.textContent = '📄 ' + formatDate(dateStr) + ' ' + dayOfWeek(dateStr);
-
-  // Map field labels
-  const allFields = [...FIELD_DEFS.full, ...FIELD_DEFS.minimal];
-  const labelMap = {};
-  allFields.forEach(f => { labelMap[f.key] = f.label; });
-  labelMap.overall = '总体感受';
-  labelMap.simple_note = '今天一句话';
-
-  let html = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:0.85rem;">';
-  const keys = data._mode === 'full'
-    ? ['cycle','period','sleep','low','anxious','irritable','mood_swing','neg_thoughts','hostile_thoughts','flip','low_energy','body_pain','completion','notes']
-    : ['cycle','period','neg_thoughts','overall','simple_note'];
-
-  keys.forEach(k => {
-    const val = data[k];
-    if (val === undefined || val === null || val === '') return;
-    const label = labelMap[k] || k;
-    let display = val;
-    if (k === 'flip') display = val ? '✓ 有' : '无';
-    html += `<div><strong>${label}：</strong>${display}</div>`;
+  detail.style.display='block';
+  title.textContent='📄 '+formatDate(dateStr)+' '+dayOfWeek(dateStr);
+  let html='';
+  TPL_ORDER.forEach(tid=>{
+    const tplData=data[tid];
+    if(!tplData||Object.keys(tplData).length<=1) return;
+    const t=TPL[tid];
+    html+=`<div style="margin-bottom:12px"><div style="font-size:0.85rem;font-weight:600;color:${t.color};margin-bottom:6px">${t.icon} ${t.name}</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:0.82rem">`;
+    const fields = t.hasModes ? t.fields[tplData._mode||'full'] : t.fields;
+    fields.forEach(f=>{
+      const v=tplData[f.key];
+      if(v===undefined||v===null||v==='') return;
+      let display=v;
+      if(f.key==='flip') display=v?'✓':'';
+      if(f.key==='stretched') display=v?'✓':'';
+      if(f.key==='nausea') display=v?'✓':'';
+      if(f.key==='light_sensitive') display=v?'✓':'';
+      html+=`<div><strong>${f.label}：</strong>${display}</div>`;
+    });
+    html+='</div></div>';
   });
-  html += '</div>';
-
-  // Edit button
-  html += `<div class="form-actions" style="margin-top:14px;">
-    <button class="btn btn-small btn-outline" onclick="editDay('${dateStr}')">✏️ 编辑此日</button>
-    <button class="btn btn-small btn-danger" onclick="deleteDay('${dateStr}')">🗑️ 删除</button>
-  </div>`;
-
-  body.innerHTML = html;
+  html+=`<div class="form-actions"><button class="btn btn-small btn-outline" onclick="editDay('${dateStr}')">✏️ 编辑此日</button>
+    <button class="btn btn-small btn-danger" style="background:#E87474;color:#fff" onclick="deleteDay('${dateStr}')">🗑️ 删除</button></div>`;
+  body.innerHTML=html;
 }
 
 function editDay(dateStr) {
-  state.currentDate = dateStr;
+  state.currentDate=dateStr;
   switchTab('today');
-  updateHeader();
   loadToday();
+  updateHeader();
   closeModal();
 }
 
 function deleteDay(dateStr) {
-  if (!confirm('确定删除 ' + formatDate(dateStr) + ' 的记录？')) return;
-  const records = getRecords();
+  if(!confirm('确定删除 '+formatDate(dateStr)+' 的所有记录？')) return;
+  const records=getRecords();
   delete records[dateStr];
   saveRecords(records);
   renderCalendar();
-  document.getElementById('calDetail').style.display = 'none';
+  document.getElementById('calDetail').style.display='none';
   updateHeader();
 }
 
@@ -1065,349 +696,311 @@ function deleteDay(dateStr) {
 //  STATS
 // ============================================================
 function renderStats(range) {
-  if (range !== undefined) state.statsRange = range;
-  const records = getRecords();
-  const dates = Object.keys(records).sort();
-
-  let filtered = dates;
-  if (state.statsRange !== 'all') {
-    const cutoff = new Date();
-    cutoff.setDate(cutoff.getDate() - parseInt(state.statsRange));
-    const cutoffStr = cutoff.getFullYear() + '-' + String(cutoff.getMonth()+1).padStart(2,'0') + '-' + String(cutoff.getDate()).padStart(2,'0');
-    filtered = dates.filter(d => d >= cutoffStr);
+  if(range!==undefined) state.statsRange=range;
+  const records=getRecords();
+  const dates=Object.keys(records).sort();
+  let filtered=dates;
+  if(state.statsRange!=='all'){
+    const cut=new Date(); cut.setDate(cut.getDate()-parseInt(state.statsRange));
+    const cs=cut.getFullYear()+'-'+String(cut.getMonth()+1).padStart(2,'0')+'-'+String(cut.getDate()).padStart(2,'0');
+    filtered=dates.filter(d=>d>=cs);
   }
-
-  // Update active button
-  document.querySelectorAll('.stats-controls .stat-btn').forEach(b => {
-    b.classList.toggle('active', b.dataset.range == state.statsRange || b.dataset.range === String(state.statsRange));
+  document.querySelectorAll('#statsRangeFilter .stat-btn').forEach(b=>{
+    b.classList.toggle('active',b.dataset.range==state.statsRange||b.dataset.range===String(state.statsRange));
   });
 
-  // Summary stats
-  const summary = document.getElementById('statsSummary');
-  if (filtered.length === 0) {
-    summary.innerHTML = '<div class="empty-state" style="grid-column:1/-1;padding:20px;"><p>暂无数据</p></div>';
-    if (state.chartInstance) { state.chartInstance.destroy(); state.chartInstance = null; }
+  // 模板选择
+  let tplHtml='<button class="stat-btn active" data-tpl="all" onclick="switchStatsTpl(\'all\')">📊 综合</button>';
+  TPL_ORDER.forEach(tid=>{
+    const t=TPL[tid];
+    const hasData=filtered.some(d=>records[d][tid]&&Object.keys(records[d][tid]).length>1);
+    if(hasData) tplHtml+=`<button class="stat-btn" data-tpl="${tid}" onclick="switchStatsTpl('${tid}')" style="border-color:${t.color}">${t.icon} ${t.name}</button>`;
+  });
+  document.getElementById('tplStatsFilter').innerHTML=tplHtml;
+
+  const summary=document.getElementById('statsSummary');
+  if(!filtered.length){
+    summary.innerHTML='<div class="empty-state" style="grid-column:1/-1;padding:16px"><p>暂无数据</p></div>';
+    if(state.chartInstance){state.chartInstance.destroy();state.chartInstance=null}
     return;
   }
 
-  const fields_to_avg = ['low','anxious','irritable','mood_swing','neg_thoughts','low_energy','body_pain','completion'];
-  const avgs = {};
-  fields_to_avg.forEach(k => {
-    const vals = filtered.map(d => records[d][k]).filter(v => v !== null && v !== undefined && v !== '');
-    if (vals.length) avgs[k] = vals.reduce((a,b) => a+b, 0) / vals.length;
-  });
-
-  const labelMap = {'low':'低落','anxious':'紧张','irritable':'烦躁','mood_swing':'起伏','neg_thoughts':'消极','low_energy':'精力','body_pain':'身体痛','completion':'完成度'};
-  let sumHtml = `<div class="stat-item"><div class="stat-value">${filtered.length}</div><div class="stat-label">记录天数</div></div>`;
-  Object.keys(avgs).forEach(k => {
-    sumHtml += `<div class="stat-item"><div class="stat-value">${avgs[k].toFixed(1)}</div><div class="stat-label">${labelMap[k]||k}</div></div>`;
-  });
-  summary.innerHTML = sumHtml;
-
-  // Chart
-  const ctx = document.getElementById('statsChart').getContext('2d');
-  if (state.chartInstance) { state.chartInstance.destroy(); }
-
-  const chartData = {
-    labels: filtered,
-    datasets: []
-  };
-
-  const colors = [
-    { label: '低落', key: 'low', color: '#E87474', bg: 'rgba(232,116,116,0.1)' },
-    { label: '紧张', key: 'anxious', color: '#E8A87C', bg: 'rgba(232,168,124,0.1)' },
-    { label: '烦躁', key: 'irritable', color: '#D4A5A5', bg: 'rgba(212,165,165,0.1)' },
-    { label: '消极', key: 'neg_thoughts', color: '#9B8EC4', bg: 'rgba(155,142,196,0.1)' },
-  ];
-
-  colors.forEach(c => {
-    const data = filtered.map(d => {
-      const v = records[d][c.key];
-      return (v !== null && v !== undefined && v !== '') ? v : null;
-    });
-    if (data.some(v => v !== null)) {
-      chartData.datasets.push({
-        label: c.label,
-        data: data,
-        borderColor: c.color,
-        backgroundColor: c.bg,
-        borderWidth: 2,
-        pointRadius: 3,
-        pointHoverRadius: 5,
-        tension: 0.3,
-        spanGaps: true,
-      });
-    }
-  });
-
-  state.chartInstance = new Chart(ctx, {
-    type: 'line',
-    data: chartData,
-    options: {
-      responsive: true,
-      maintainAspectRatio: true,
-      aspectRatio: 2.2,
-      plugins: {
-        legend: { position: 'top', labels: { boxWidth: 12, padding: 12, font: { size: 11 } } },
-      },
-      scales: {
-        x: {
-          ticks: {
-            maxTicksLimit: 15,
-            font: { size: 10 },
-            callback: function(val) {
-              const label = this.getLabelForValue(val);
-              return label.slice(5);
-            }
-          },
-          grid: { display: false }
-        },
-        y: {
-          min: 0,
-          max: 6.5,
-          ticks: { stepSize: 1, font: { size: 10 } },
-          grid: { color: '#F0EDE8' }
+  // 统计汇总
+  const allNumeric = {};
+  filtered.forEach(d=>{
+    TPL_ORDER.forEach(tid=>{
+      const tplData=records[d][tid];
+      if(!tplData) return;
+      const fields=TPL[tid].hasModes ? TPL[tid].fields[tplData._mode||'full'] : TPL[tid].fields;
+      fields.forEach(f=>{
+        if(f.type!=='number'||f.key==='temperature') return;
+        const v=tplData[f.key];
+        if(v!==null && v!==undefined && v!==''){
+          if(!allNumeric[tid+'_'+f.key]) allNumeric[tid+'_'+f.key]=[];
+          allNumeric[tid+'_'+f.key].push(v);
         }
-      },
-      interaction: {
-        mode: 'index',
-        intersect: false,
+      });
+    });
+  });
+
+  const labelMap={'mood_low':'低落','mood_anxious':'紧张','mood_irritable':'烦躁','mood_neg_thoughts':'消极','mood_low_energy':'精力','mood_body_pain':'身体痛','mood_completion':'完成度','headache_pain_level':'头痛','cold_sore_throat':'喉咙痛','cold_cough':'咳嗽','cold_runny_nose':'流鼻涕','cold_headache':'头痛','cold_body_ache':'酸痛','exercise_pain_level':'运动疼','exercise_intensity':'强度','exercise_duration_min':'时长'};
+  let sumHtml=`<div class="stat-item"><div class="stat-value">${filtered.length}</div><div class="stat-label">记录天数</div></div>`;
+  Object.keys(allNumeric).forEach(k=>{
+    const vals=allNumeric[k];
+    if(vals.length<2) return;
+    const avg=vals.reduce((a,b)=>a+b,0)/vals.length;
+    const label=labelMap[k]||k;
+    sumHtml+=`<div class="stat-item"><div class="stat-value">${avg.toFixed(1)}</div><div class="stat-label">${label}</div></div>`;
+  });
+  summary.innerHTML=sumHtml;
+
+  // 图表
+  const ctx=document.getElementById('statsChart').getContext('2d');
+  if(state.chartInstance){state.chartInstance.destroy()}
+  const datasets=[];
+  const tplFilter=state.statsTpl;
+  TPL_ORDER.forEach(tid=>{
+    if(tplFilter!=='all' && tplFilter!==tid) return;
+    const t=TPL[tid];
+    const fields=t.hasModes ? t.fields[t.modes?('full'):'full'] : t.fields;
+    const numericFields=fields.filter(f=>f.type==='number'&&f.key!=='temperature'&&f.key!=='duration_min');
+    const colors=[t.color,'#E87474','#E8A87C','#D4A5A5','#9B8EC4','#7EB89D','#E8C87C','#B8A5C8'];
+    numericFields.forEach((f,fi)=>{
+      const data=filtered.map(d=>{const v=records[d][tid]?.[f.key];return(v!==null&&v!==undefined&&v!=='')?v:null});
+      if(data.some(v=>v!==null)){
+        datasets.push({
+          label:t.icon+' '+f.label,
+          data,
+          borderColor:colors[fi%colors.length],
+          backgroundColor:colors[fi%colors.length]+'20',
+          borderWidth:2,pointRadius:3,pointHoverRadius:5,tension:0.3,spanGaps:true
+        });
       }
+    });
+  });
+  state.chartInstance=new Chart(ctx,{
+    type:'line',data:{labels:filtered,datasets},
+    options:{
+      responsive:true,maintainAspectRatio:true,aspectRatio:2.2,
+      plugins:{legend:{position:'top',labels:{boxWidth:12,padding:10,font:{size:10}}}},
+      scales:{
+        x:{ticks:{maxTicksLimit:12,font:{size:9},callback:function(v){return this.getLabelForValue(v).slice(5)}},grid:{display:false}},
+        y:{min:0,max:6.5,ticks:{stepSize:1,font:{size:9}},grid:{color:'#F0EDE8'}}
+      },
+      interaction:{mode:'index',intersect:false}
     }
   });
 }
 
+function switchStatsTpl(tpl) {
+  state.statsTpl=tpl;
+  document.querySelectorAll('#tplStatsFilter .stat-btn').forEach(b=>b.classList.toggle('active',b.dataset.tpl===tpl));
+  renderStats(state.statsRange);
+}
+
 // ============================================================
-//  SETTINGS / EXPORT / IMPORT
+//  SETTINGS
 // ============================================================
 function exportJSON() {
-  const records = getRecords();
-  const area = document.getElementById('exportArea');
-  const json = JSON.stringify(records, null, 2);
-  area.textContent = json;
-  area.style.display = 'block';
-  downloadFile(json, '每日记录_备份_' + todayStr() + '.json', 'application/json');
+  const records=getRecords();
+  const area=document.getElementById('exportArea');
+  const json=JSON.stringify(records,null,2);
+  area.textContent=json;area.style.display='block';
+  downloadFile(json,'每日记录_备份_'+todayStr()+'.json','application/json');
 }
-
 function exportCSV() {
-  const records = getRecords();
-  const dates = Object.keys(records).sort();
-  if (!dates.length) { alert('暂无数据可导出'); return; }
-
-  // Collect all keys
-  const allKeys = new Set();
-  dates.forEach(d => { Object.keys(records[d]).forEach(k => allKeys.add(k)); });
-  const keys = ['date', ...Array.from(allKeys).filter(k => !k.startsWith('_'))];
-  const labelMap = {'date':'日期','cycle':'周期','period':'月经','sleep':'睡眠h','low':'低落','anxious':'紧张','irritable':'烦躁','mood_swing':'起伏','neg_thoughts':'消极念头','hostile_thoughts':'敌意念头','flip':'翻转','low_energy':'精力低','body_pain':'身体痛','completion':'完成度','notes':'备注','overall':'总体感受','simple_note':'今天一句话'};
-
-  let csv = keys.map(k => labelMap[k] || k).join(',') + '\n';
-  dates.forEach(d => {
-    const row = [d];
-    keys.slice(1).forEach(k => {
-      let v = records[d][k];
-      if (v === null || v === undefined) v = '';
-      if (typeof v === 'boolean') v = v ? '是' : '否';
-      if (typeof v === 'string' && v.includes(',')) v = '"' + v + '"';
+  const records=getRecords();const dates=Object.keys(records).sort();
+  if(!dates.length){alert('暂无数据');return}
+  const allKeys=new Set();
+  dates.forEach(d=>{Object.keys(records[d]||{}).forEach(tpl=>{
+    if(TPL[tpl]) Object.keys(records[d][tpl]||{}).forEach(k=>allKeys.add(tpl+'_'+k));
+  })});
+  const keys=['date',...Array.from(allKeys).filter(k=>!k.endsWith('_updated')&&!k.endsWith('_mode'))];
+  const labelMap={'date':'日期'};
+  TPL_ORDER.forEach(tid=>{const t=TPL[tid];(t.hasModes ? t.fields.full : t.fields).forEach(f=>{labelMap[tid+'_'+f.key]=t.name+'-'+f.label})});
+  let csv=keys.map(k=>labelMap[k]||k).join(',')+'\n';
+  dates.forEach(d=>{
+    const row=[d];
+    keys.slice(1).forEach(k=>{
+      const [tpl,field]=k.split('_');
+      let v=records[d]?.[tpl]?.[field];
+      if(v===null||v===undefined) v='';
+      if(typeof v==='boolean') v=v?'是':'否';
+      if(typeof v==='string'&&v.includes(',')) v='"'+v+'"';
       row.push(v);
     });
-    csv += row.join(',') + '\n';
+    csv+=row.join(',')+'\n';
   });
-
-  const area = document.getElementById('exportArea');
-  area.textContent = csv;
-  area.style.display = 'block';
-  downloadFile(csv, '每日记录_备份_' + todayStr() + '.csv', 'text/csv');
+  const area=document.getElementById('exportArea');
+  area.textContent=csv;area.style.display='block';
+  downloadFile(csv,'每日记录_备份_'+todayStr()+'.csv','text/csv');
 }
-
-function downloadFile(content, filename, mime) {
-  const blob = new Blob([content], { type: mime + ';charset=utf-8' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-}
-
+function downloadFile(c,f,m){const b=new Blob([c],{type:m+';charset=utf-8'});const u=URL.createObjectURL(b);const a=document.createElement('a');a.href=u;a.download=f;document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(u)}
 function importData() {
-  const fileInput = document.getElementById('importFile');
-  if (!fileInput.files || !fileInput.files[0]) { alert('请先选择文件'); return; }
-  const reader = new FileReader();
-  reader.onload = function(e) {
-    try {
-      const imported = JSON.parse(e.target.result);
-      const records = getRecords();
-      let count = 0;
-      Object.keys(imported).forEach(date => {
-        if (imported[date] && typeof imported[date] === 'object') {
-          records[date] = imported[date];
-          count++;
-        }
-      });
-      saveRecords(records);
-      alert('成功导入 ' + count + ' 条记录');
-      updateHeader();
-      renderCalendar();
-      renderStats();
-    } catch(err) {
-      alert('导入失败：文件格式不正确 ' + err.message);
-    }
-  };
-  reader.readAsText(fileInput.files[0]);
+  const fi=document.getElementById('importFile');
+  if(!fi.files||!fi.files[0]){alert('请选择文件');return}
+  const r=new FileReader();
+  r.onload=function(e){
+    try{
+      const imp=JSON.parse(e.target.result);const rec=getRecords();let cnt=0;
+      Object.keys(imp).forEach(d=>{if(imp[d]&&typeof imp[d]==='object'){rec[d]=imp[d];cnt++}});
+      saveRecords(rec);alert('成功导入 '+cnt+' 条记录');updateHeader();renderCalendar();renderStats();
+    }catch(err){alert('导入失败：'+err.message)}
+  };r.readAsText(fi.files[0]);
+}
+
+function saveToFile() {
+  const records=getRecords();
+  if(Object.keys(records).length===0){showFileFeedback('暂无数据','error');return}
+  const json=JSON.stringify(records,null,2);
+  const b=new Blob([json],{type:'application/json'});const u=URL.createObjectURL(b);
+  const a=document.createElement('a');a.href=u;a.download='mood_data_'+todayStr()+'.json';
+  document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(u);
+  showFileFeedback('✅ 已保存','success');
+}
+function loadFromFile(e) {
+  const f=e.target.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=function(ev){
+    try{
+      const imp=JSON.parse(ev.target.result);const rec=getRecords();let cnt=0;
+      Object.keys(imp).forEach(d=>{if(imp[d]&&typeof imp[d]==='object'){rec[d]=imp[d];cnt++}});
+      saveRecords(rec);showFileFeedback('✅ 已恢复 '+cnt+' 条','success');updateHeader();renderCalendar();renderStats();
+    }catch(err){showFileFeedback('⚠️ 文件格式错误','error')}
+  };r.readAsText(f);e.target.value='';
+}
+function showFileFeedback(msg,type) {
+  const el=document.getElementById('fileSyncFeedback');
+  if(!el)return;el.textContent=type==='success'?'✅ '+msg:'⚠️ '+msg;
+  el.className='save-feedback '+type;setTimeout(()=>{el.className='save-feedback'},4000);
 }
 
 // ============================================================
-//  参考说明
-// ============================================================
-function openRef() {
-  document.getElementById('refOverlay').classList.add('show');
-}
-function closeRef() {
-  document.getElementById('refOverlay').classList.remove('show');
-}
-
-// ============================================================
-//  批量编辑
+//  BATCH EDIT
 // ============================================================
 function renderBatchEdit() {
-  const container = document.getElementById('batchEditContent');
-  if (!container) return;
-  const records = getRecords();
-  const dates = Object.keys(records).sort();
-
-  // 计算默认日期范围：有数据就用最早最晚，没数据就用最近30天
-  let defaultStart = dates[0];
-  let defaultEnd = dates[dates.length - 1];
-  if (!defaultStart) {
-    const d = new Date();
-    d.setDate(d.getDate() - 30);
-    defaultStart = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
-    defaultEnd = todayStr();
-  }
-
-  const fields = FIELD_DEFS.full; // 使用完整版字段
-  let html = '<div style="font-size:0.82rem;color:#666;margin-bottom:12px;background:#F0EDE8;border-radius:8px;padding:10px;">';
-  html += '<strong>💡 这个功能用来做什么？</strong><br>比如你的运动手环记录了一周的睡眠数据，或者来例假后想回填周期数据——不用每天改，一次性批量更新。</div>';
-
-  // 步骤1：选日期范围
-  html += '<div style="margin-bottom:14px;"><label style="font-size:0.82rem;font-weight:600;color:#5B7DB1;display:block;margin-bottom:8px;">① 选择日期范围</label>';
-  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">';
-  html += '<div><label style="font-size:0.78rem;color:#666;display:block;margin-bottom:3px;">从</label>';
-  html += `<input type="date" id="batchStart" value="${defaultStart}" style="width:100%;border:1.5px solid #E8E4DD;border-radius:8px;padding:8px 10px;font-size:0.88rem;font-family:inherit;"></div>`;
-  html += '<div><label style="font-size:0.78rem;color:#666;display:block;margin-bottom:3px;">到</label>';
-  html += `<input type="date" id="batchEnd" value="${defaultEnd}" style="width:100%;border:1.5px solid #E8E4DD;border-radius:8px;padding:8px 10px;font-size:0.88rem;font-family:inherit;"></div>`;
-  html += '</div></div>';
-
-  // 步骤2：选字段
-  html += '<div style="margin-bottom:14px;"><label style="font-size:0.82rem;font-weight:600;color:#5B7DB1;display:block;margin-bottom:8px;">② 勾选要修改的字段（可多选）</label>';
-  html += '<div style="display:flex;flex-wrap:wrap;gap:6px;">';
-  fields.forEach(f => {
-    if (f.key === 'notes' || f.key === 'flip') return; // 备注和翻转不适合批量
-    html += `<label style="display:flex;align-items:center;gap:4px;font-size:0.82rem;padding:4px 10px;background:#F8F6F0;border-radius:6px;cursor:pointer;">
-      <input type="checkbox" class="batch-field" value="${f.key}" style="accent-color:#5B7DB1;"> ${f.label} <span style="color:#999;font-size:0.7rem;">(${f.hint})</span></label>`;
+  const container=document.getElementById('batchEditContent');
+  if(!container)return;
+  const records=getRecords();const dates=Object.keys(records).sort();
+  let defaultStart=dates[0],defaultEnd=dates[dates.length-1];
+  if(!defaultStart){const d=new Date();d.setDate(d.getDate()-30);defaultStart=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');defaultEnd=todayStr()}
+  let html='<div style="font-size:0.82rem;color:#666;margin-bottom:10px;background:#F0EDE8;border-radius:8px;padding:8px">选择模板、日期范围，勾选字段后批量更新。</div>';
+  // 模板选择
+  html+='<div style="margin-bottom:10px"><label style="font-size:0.78rem;color:#666;display:block;margin-bottom:4px;font-weight:500">选择模板：</label><div style="display:flex;gap:6px;flex-wrap:wrap">';
+  TPL_ORDER.forEach(tid=>{
+    html+=`<label style="display:flex;align-items:center;gap:4px;font-size:0.82rem;padding:4px 10px;background:#F8F6F0;border-radius:6px;cursor:pointer"><input type="radio" name="batchTpl" value="${tid}" class="batch-tpl-radio" ${tid==='mood'?'checked':''} style="accent-color:${TPL[tid].color}"> ${TPL[tid].icon} ${TPL[tid].name}</label>`;
   });
-  html += '</div></div>';
-
-  // 步骤3：填新值
-  html += '<div style="margin-bottom:14px;"><label style="font-size:0.82rem;font-weight:600;color:#5B7DB1;display:block;margin-bottom:8px;">③ 填入新值</label>';
-  html += '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">';
-  html += '<input type="text" id="batchValue" placeholder="例如：7.5（睡眠）或 -3（周期）" style="flex:1;min-width:120px;border:1.5px solid #E8E4DD;border-radius:8px;padding:8px 10px;font-size:0.88rem;font-family:inherit;">';
-  html += '<button class="btn btn-small btn-primary" onclick="applyBatchEdit()">✓ 应用修改</button>';
-  html += '</div></div>';
-
-  // 预览
-  html += '<div id="batchPreview" style="font-size:0.82rem;color:#666;padding:8px 12px;background:#F8F6F0;border-radius:8px;"></div>';
-
-  container.innerHTML = html;
-
-  // 实时预览
-  ['batchStart', 'batchEnd'].forEach(id => {
-    document.getElementById(id).addEventListener('change', updateBatchPreview);
-  });
+  html+='</div></div>';
+  // 日期范围
+  html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">';
+  html+=`<div><label style="font-size:0.78rem;color:#666">从</label><input type="date" id="batchStart" value="${defaultStart}" style="width:100%;border:1.5px solid #E8E4DD;border-radius:8px;padding:7px 10px;font-size:0.85rem"></div>`;
+  html+=`<div><label style="font-size:0.78rem;color:#666">到</label><input type="date" id="batchEnd" value="${defaultEnd}" style="width:100%;border:1.5px solid #E8E4DD;border-radius:8px;padding:7px 10px;font-size:0.85rem"></div>`;
+  html+='</div>';
+  // 字段选择
+  html+='<div id="batchFields" style="margin-bottom:10px"></div>';
+  // 值
+  html+='<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px">';
+  html+='<input type="text" id="batchValue" placeholder="填入新值" style="flex:1;min-width:100px;border:1.5px solid #E8E4DD;border-radius:8px;padding:7px 10px;font-size:0.85rem">';
+  html+='<button class="btn btn-small btn-primary" onclick="applyBatchEdit()">✓ 应用</button></div>';
+  html+='<div id="batchPreview" style="font-size:0.8rem;color:#666;padding:6px 10px;background:#F8F6F0;border-radius:8px"></div>';
+  container.innerHTML=html;
+  renderBatchFields();
+  document.querySelectorAll('.batch-tpl-radio').forEach(el=>el.addEventListener('change',renderBatchFields));
+  ['batchStart','batchEnd'].forEach(id=>document.getElementById(id).addEventListener('change',updateBatchPreview));
   updateBatchPreview();
 }
 
+function renderBatchFields() {
+  const tid=document.querySelector('.batch-tpl-radio:checked')?.value||'mood';
+  const t=TPL[tid];const fields=t.hasModes?t.fields.full:t.fields;
+  const container=document.getElementById('batchFields');
+  let html='<label style="font-size:0.78rem;color:#666;display:block;margin-bottom:4px;font-weight:500">选择字段：</label><div style="display:flex;flex-wrap:wrap;gap:5px">';
+  fields.forEach(f=>{
+    if(f.key==='notes'||f.key==='flip'||f.key==='nausea'||f.key==='light_sensitive'||f.key==='stretched'||f.key==='medication'||f.key==='triggers'||f.key==='simple_note') return;
+    html+=`<label style="display:flex;align-items:center;gap:3px;font-size:0.8rem;padding:3px 8px;background:#F8F6F0;border-radius:6px;cursor:pointer"><input type="checkbox" class="batch-field" value="${f.key}" style="accent-color:#5B7DB1"> ${f.label}</label>`;
+  });
+  html+='</div>';container.innerHTML=html;
+}
+
 function updateBatchPreview() {
-  const el = document.getElementById('batchPreview');
-  if (!el) return;
-  const records = getRecords();
-  const start = document.getElementById('batchStart').value;
-  const end = document.getElementById('batchEnd').value;
-  if (!start || !end) { el.textContent = '请选择日期范围'; return; }
-  const count = Object.keys(records).filter(d => d >= start && d <= end).length;
-  if (count === 0) {
-    el.innerHTML = '📭 选定范围内暂无记录，请先到"今天"页面填写一些数据，或者扩大日期范围';
-  } else {
-    el.innerHTML = `📋 选定范围内有 <strong>${count}</strong> 条记录，勾选字段后点击"应用修改"即可批量更新`;
-  }
+  const el=document.getElementById('batchPreview');if(!el)return;
+  const records=getRecords();const start=document.getElementById('batchStart').value;const end=document.getElementById('batchEnd').value;
+  if(!start||!end){el.textContent='';return}
+  const cnt=Object.keys(records).filter(d=>d>=start&&d<=end).length;
+  el.innerHTML=cnt?`📋 范围内有 <strong>${cnt}</strong> 条记录`:'📭 暂无记录';
 }
 
 function applyBatchEdit() {
-  const start = document.getElementById('batchStart').value;
-  const end = document.getElementById('batchEnd').value;
-  const value = document.getElementById('batchValue').value.trim();
-  if (!start || !end) { alert('请选择日期范围'); return; }
-  if (value === '') { alert('请填入要设置的值'); return; }
-
-  const selectedFields = Array.from(document.querySelectorAll('.batch-field:checked')).map(el => el.value);
-  if (selectedFields.length === 0) { alert('请至少勾选一个字段'); return; }
-
-  if (!confirm(`确定将 ${selectedFields.length} 个字段的值设为 "${value}"？\n这将影响 ${start} 到 ${end} 范围内的所有记录。`)) return;
-
-  const records = getRecords();
-  let count = 0;
-  Object.keys(records).forEach(d => {
-    if (d >= start && d <= end) {
-      selectedFields.forEach(k => {
-        const num = parseFloat(value);
-        records[d][k] = isNaN(num) ? value : num;
-      });
-      count++;
+  const start=document.getElementById('batchStart').value;const end=document.getElementById('batchEnd').value;
+  const val=document.getElementById('batchValue').value.trim();const tid=document.querySelector('.batch-tpl-radio:checked')?.value||'mood';
+  if(!start||!end){alert('请选择日期范围');return}
+  if(val===''){alert('请填入要设置的值');return}
+  const sel=Array.from(document.querySelectorAll('.batch-field:checked')).map(el=>el.value);
+  if(!sel.length){alert('请勾选字段');return}
+  if(!confirm(`将 ${TPL[tid].name} 的 ${sel.length} 个字段设为 "${val}"（${start} ~ ${end}）？`)) return;
+  const records=getRecords();let cnt=0;
+  Object.keys(records).forEach(d=>{
+    if(d>=start&&d<=end){
+      if(!records[d][tid]) records[d][tid]={};
+      sel.forEach(k=>{const n=parseFloat(val);records[d][tid][k]=isNaN(n)?val:n});
+      records[d][tid]._updated=new Date().toISOString();
+      cnt++;
     }
   });
-  saveRecords(records);
-  updateHeader();
-  renderCalendar();
-  renderStats();
-  alert(`✅ 已更新 ${count} 条记录`);
-}
-function openModal(title, bodyHtml) {
-  document.getElementById('modalTitle').textContent = title;
-  document.getElementById('modalBody').innerHTML = bodyHtml;
-  document.getElementById('modalOverlay').classList.add('show');
+  saveRecords(records);updateHeader();renderCalendar();renderStats();
+  alert('✅ 已更新 '+cnt+' 条记录');
 }
 
-function closeModal(e) {
-  if (e && e.target !== e.currentTarget) return;
-  document.getElementById('modalOverlay').classList.remove('show');
+// ============================================================
+//  REFERENCE
+// ============================================================
+function openRef() {
+  const body=document.getElementById('refDetail');
+  let html='';
+  TPL_ORDER.forEach(tid=>{
+    const t=TPL[tid];
+    html+=`<div style="margin-bottom:12px"><strong style="color:${t.color};font-size:0.9rem">${t.icon} ${t.name}</strong><table style="width:100%;border-collapse:collapse;margin-top:4px">`;
+    const fields=t.hasModes?t.fields.full:t.fields;
+    fields.forEach(f=>{
+      if(!f.desc&&!f.hint) return;
+      html+=`<tr><td style="padding:3px 8px;border-bottom:1px solid #F0EDE8;font-size:0.78rem;width:30%"><strong>${f.label}</strong>${f.hint?` <span style="color:#999">(${f.hint})</span>`:''}</td>
+        <td style="padding:3px 8px;border-bottom:1px solid #F0EDE8;font-size:0.78rem">${f.desc||''}</td></tr>`;
+    });
+    html+='</table></div>';
+  });
+  body.innerHTML=html;
+  document.getElementById('refOverlay').classList.add('show');
 }
+function closeRef(){document.getElementById('refOverlay').classList.remove('show')}
+
+// ============================================================
+//  MODAL
+// ============================================================
+function openModal(title,bodyHtml){document.getElementById('modalTitle').textContent=title;document.getElementById('modalBody').innerHTML=bodyHtml;document.getElementById('modalOverlay').classList.add('show')}
+function closeModal(e){if(e&&e.target!==e.currentTarget)return;document.getElementById('modalOverlay').classList.remove('show')}
 
 // ============================================================
 //  INIT
 // ============================================================
 function init() {
-  const s = getSettings();
-  state.mode = s.mode || 'full';
-  document.getElementById('modeToggle').textContent = state.mode === 'full' ? '切换到极简版' : '切换到完整版';
+  // 迁移旧数据
+  migrateOldData();
 
-  renderForm();
+  const s=getSettings();
+  state.moodMode=s.mode||'full';
+  state.activeTpl=s.tpl||'mood';
+
+  renderTplTabs();
+  renderTplContent(state.activeTpl);
   updateHeader();
   loadToday();
   renderCalendar();
   renderBatchEdit();
 
-  // Stats controls
-  document.querySelectorAll('.stats-controls .stat-btn').forEach(btn => {
-    btn.addEventListener('click', function() {
-      renderStats(parseInt(this.dataset.range) || this.dataset.range);
-    });
+  document.querySelectorAll('#statsRangeFilter .stat-btn').forEach(b=>{
+    b.addEventListener('click',function(){renderStats(parseInt(this.dataset.range)||this.dataset.range)});
   });
-
-  }
-
-document.addEventListener('DOMContentLoaded', init);
+}
+document.addEventListener('DOMContentLoaded',init);
 </script>
-</body>
-</html>
+</body></html>
